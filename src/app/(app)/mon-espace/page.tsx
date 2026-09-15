@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { subWeeks } from "date-fns";
 
 import { exigerUtilisateur } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { chargerTaches, chargerTachesDuJour } from "@/lib/donnees";
-import { formaterDate, intervalle } from "@/lib/dates";
+import { formaterDate, formaterDateCourte, intervalle } from "@/lib/dates";
 import { BadgeStatutTache } from "@/components/badges";
+import { CourbeEvolution } from "@/components/graphiques/courbe-evolution";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +19,8 @@ import {
 import { Progress } from "@/components/ui/progress";
 
 export const dynamic = "force-dynamic";
+
+const SEMAINES_PROGRESSION = 6;
 
 export default async function PageMonEspace() {
   const utilisateur = await exigerUtilisateur();
@@ -43,6 +47,8 @@ export default async function PageMonEspace() {
       },
     }),
   ]);
+
+  const progression = await construireProgression(utilisateur.id);
 
   const termineesSemaine = tachesSemaine.filter(
     (t) => t.statut === "TERMINEE",
@@ -95,6 +101,26 @@ export default async function PageMonEspace() {
           </CardHeader>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Ma progression</CardTitle>
+          <CardDescription>
+            Vos six dernières semaines. Ces chiffres ne vous comparent à
+            personne.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CourbeEvolution
+            donnees={progression}
+            series={[
+              { cle: "completion", libelle: "Tâches terminées" },
+              { cle: "ponctualite", libelle: "Dans les délais" },
+            ]}
+            unite=" %"
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-3">
@@ -174,4 +200,51 @@ export default async function PageMonEspace() {
       )}
     </div>
   );
+}
+
+/**
+ * Progression personnelle sur six semaines.
+ *
+ * Volontairement calculée ici plutôt que via calculerScores : le score global
+ * intègre un volume normalisé sur la moyenne de l'équipe, donc une comparaison
+ * implicite avec les collègues. Un membre ne doit voir que ses propres chiffres.
+ */
+async function construireProgression(userId: string) {
+  const points = [];
+
+  for (let i = SEMAINES_PROGRESSION - 1; i >= 0; i--) {
+    const semaine = intervalle("semaine", subWeeks(new Date(), i));
+
+    const taches = await prisma.task.findMany({
+      where: {
+        assignes: { some: { userId } },
+        echeance: { gte: semaine.debut, lte: semaine.fin },
+        statut: { not: "ANNULEE" },
+      },
+      select: { statut: true, echeance: true, dateFin: true },
+    });
+
+    const maintenant = new Date();
+    const exigibles = taches.filter(
+      (t) => t.echeance < maintenant || t.statut === "TERMINEE",
+    );
+    const terminees = taches.filter((t) => t.statut === "TERMINEE");
+    const aLheure = terminees.filter(
+      (t) => !t.dateFin || t.dateFin <= t.echeance,
+    );
+
+    points.push({
+      periode: formaterDateCourte(semaine.debut),
+      completion:
+        exigibles.length > 0
+          ? Math.round((terminees.length / exigibles.length) * 100)
+          : null,
+      ponctualite:
+        terminees.length > 0
+          ? Math.round((aLheure.length / terminees.length) * 100)
+          : null,
+    });
+  }
+
+  return points;
 }

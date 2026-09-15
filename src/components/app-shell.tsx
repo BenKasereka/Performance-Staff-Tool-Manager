@@ -21,6 +21,7 @@ const LIENS_MANAGER = [
   { href: "/manager", libelle: "Tableau de bord" },
   { href: "/manager/missions", libelle: "Missions" },
   { href: "/manager/taches", libelle: "Tâches" },
+  { href: "/manager/performance", libelle: "Performance" },
   { href: "/manager/equipe", libelle: "Équipe" },
   { href: "/manager/organigramme", libelle: "Organigramme" },
 ];

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { exigerManager } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { chargerMembres, chargerTaches } from "@/lib/donnees";
+import { calculerScores } from "@/lib/kpi";
 import { formaterDate, formaterDateHeure, joursRestants } from "@/lib/dates";
 import {
   JOURS_ALERTE_FIN_MISSION,
@@ -47,10 +48,19 @@ export default async function PageMission({
   });
   if (!mission) notFound();
 
-  const [taches, membres] = await Promise.all([
+  const [taches, membres, contributionsBrutes] = await Promise.all([
     chargerTaches({ missionId: mission.id }),
     chargerMembres(),
+    calculerScores({
+      debut: mission.dateDebut,
+      fin: mission.dateFinActuelle,
+      missionId: mission.id,
+    }),
   ]);
+
+  const contributions = [...contributionsBrutes].sort(
+    (a, b) => b.scoreGlobal - a.scoreGlobal,
+  );
 
   const terminees = taches.filter((t) => t.statut === "TERMINEE").length;
   const enRetard = taches.filter((t) => estEnRetard(t)).length;
@@ -167,18 +177,68 @@ export default async function PageMission({
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Membres assignés</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Contribution par membre</CardTitle>
+          <CardDescription>
+            Score calculé sur le périmètre de cette mission uniquement.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          {mission.membres.map((m) => (
-            <span
-              key={m.userId}
-              className="rounded-md bg-muted px-2 py-1 text-sm"
-            >
-              {m.user.nom}
-            </span>
-          ))}
+        <CardContent>
+          {contributions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Aucun membre assigné à cette mission.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+                    <th className="py-2 pr-3 font-medium">Membre</th>
+                    <th className="py-2 pr-3 text-right font-medium">Score</th>
+                    <th className="py-2 pr-3 text-right font-medium">
+                      Complétion
+                    </th>
+                    <th className="py-2 pr-3 text-right font-medium">Délais</th>
+                    <th className="py-2 pr-3 text-right font-medium">Qualité</th>
+                    <th className="py-2 text-right font-medium">Tâches</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contributions.map((c) => (
+                    <tr key={c.userId} className="border-b last:border-0">
+                      <td className="py-2 pr-3">
+                        <Link
+                          href={`/manager/performance/${c.userId}`}
+                          className="font-medium hover:underline"
+                        >
+                          {c.nom}
+                        </Link>
+                      </td>
+                      <td className="py-2 pr-3 text-right font-semibold tabular-nums">
+                        {c.scoreGlobal}
+                      </td>
+                      <td className="py-2 pr-3 text-right tabular-nums">
+                        {c.tauxCompletion} %
+                      </td>
+                      <td className="py-2 pr-3 text-right tabular-nums">
+                        {c.ponctualite} %
+                      </td>
+                      <td className="py-2 pr-3 text-right tabular-nums">
+                        {c.qualiteNonEvaluee ? (
+                          <span className="text-muted-foreground">non noté</span>
+                        ) : (
+                          `${c.noteMoyenneSur5} / 5`
+                        )}
+                      </td>
+                      <td className="py-2 text-right tabular-nums">
+                        {c.nbTachesTerminees}/{c.nbTachesExigibles}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

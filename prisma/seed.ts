@@ -132,7 +132,9 @@ async function main() {
   });
 
   const membres = [];
-  for (const { superieur: _superieur, ...membre } of EQUIPE) {
+  for (const entree of EQUIPE) {
+    const { superieur, ...membre } = entree;
+    void superieur;
     membres.push(
       await prisma.user.upsert({
         where: { email: membre.email },
