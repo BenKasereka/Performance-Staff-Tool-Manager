@@ -9,6 +9,7 @@ import { chargerTaches } from "@/lib/donnees";
 import { formaterDate, intervalle } from "@/lib/dates";
 import { estEnRetard, livreeEnRetard } from "@/lib/taches";
 import { BadgeStatutTache } from "@/components/badges";
+import { BoutonsRapport } from "@/components/boutons-rapport";
 import { CourbeEvolution } from "@/components/graphiques/courbe-evolution";
 import { Button } from "@/components/ui/button";
 import {
@@ -265,7 +266,11 @@ export default async function PageMembrePerformance({
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <BoutonsRapport
+          base={`/api/rapports/membre/${membre.id}?g=mois`}
+          libelle="Rapport d'évaluation"
+        />
         <Button variant="outline" asChild>
           <Link href={`/manager/taches?membre=${membre.id}&g=mois`}>
             Toutes ses tâches

@@ -287,14 +287,22 @@ export async function enregistrerBilanQualitatif(
   await exigerManager();
 
   const missionId = String(donnees.get("missionId") ?? "");
-  const bilan = String(donnees.get("bilan") ?? "").trim();
 
   const mission = await prisma.mission.findUnique({ where: { id: missionId } });
   if (!mission) return { erreur: "Mission introuvable." };
 
+  const lire = (champ: string) => String(donnees.get(champ) ?? "").trim() || null;
+
   await prisma.mission.update({
     where: { id: missionId },
-    data: { bilanQualitatifManager: bilan || null },
+    data: {
+      bilanContexte: lire("contexte"),
+      bilanQualitatifManager: lire("synthese"),
+      bilanPointsForts: lire("pointsForts"),
+      bilanDefis: lire("defis"),
+      bilanRecommandations: lire("recommandations"),
+      bilanConclusion: lire("conclusion"),
+    },
   });
 
   revalidatePath(`/manager/missions/${missionId}`);

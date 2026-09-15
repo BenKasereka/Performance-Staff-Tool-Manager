@@ -119,7 +119,14 @@ model Mission {
   dateFinActuelle   DateTime
   dateCloture       DateTime?
 
+  // Bilan du manager, structuré comme un vrai rapport de fin de mission :
+  // une synthèse, puis les trois volets attendus d'un document de passation.
+  bilanContexte          String?
   bilanQualitatifManager String?
+  bilanPointsForts       String?
+  bilanDefis             String?
+  bilanRecommandations   String?
+  bilanConclusion        String?
 
   // Suivi des alertes de fin de mission (évite les doublons d'envoi)
   alerteJ3EnvoyeeLe        DateTime?

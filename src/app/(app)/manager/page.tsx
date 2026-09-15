@@ -11,6 +11,7 @@ import { formaterDate, intervalle, joursRestants } from "@/lib/dates";
 import { JOURS_ALERTE_FIN_MISSION } from "@/lib/missions";
 
 import { BadgeStatutTache } from "@/components/badges";
+import { BoutonsRapport } from "@/components/boutons-rapport";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -63,12 +64,17 @@ export default async function PageManager() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Tableau de bord</h1>
-        <p className="text-sm text-muted-foreground">
-          Bonjour {utilisateur.nom}, {tauxSemaine} % des tâches de la semaine
-          sont terminées.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Tableau de bord
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Bonjour {utilisateur.nom}, {tauxSemaine} % des tâches de la semaine
+            sont terminées.
+          </p>
+        </div>
+        <BoutonsRapport base="/api/rapports/raci" libelle="RACI de passation" />
       </div>
 
       {missionsEnAttente.length > 0 && (

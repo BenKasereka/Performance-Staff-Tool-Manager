@@ -14,6 +14,7 @@ import {
 } from "@/lib/missions";
 import { estEnRetard } from "@/lib/taches";
 import { BadgeStatutMission } from "@/components/badges";
+import { BoutonsRapport } from "@/components/boutons-rapport";
 import { DialogueMission } from "@/components/dialogue-mission";
 import { DialogueTache } from "@/components/dialogue-tache";
 import { ListeTaches } from "@/components/liste-taches";
@@ -127,6 +128,16 @@ export default async function PageMission({
             missionId={mission.id}
             statut={mission.statut}
             echeanceActuelle={mission.dateFinActuelle}
+          />
+          {(mission.statut === "CLOTUREE" || mission.statut === "ARCHIVEE") && (
+            <BoutonsRapport
+              base={`/api/rapports/mission/${mission.id}`}
+              libelle="Rapport de fin de mission"
+            />
+          )}
+          <BoutonsRapport
+            base={`/api/rapports/raci?mission=${mission.id}`}
+            libelle="RACI de passation"
           />
         </div>
       </div>
@@ -275,7 +286,14 @@ export default async function PageMission({
       {(mission.statut === "CLOTUREE" || mission.statut === "ARCHIVEE") && (
         <BilanQualitatif
           missionId={mission.id}
-          bilan={mission.bilanQualitatifManager}
+          bilan={{
+            contexte: mission.bilanContexte,
+            synthese: mission.bilanQualitatifManager,
+            pointsForts: mission.bilanPointsForts,
+            defis: mission.bilanDefis,
+            recommandations: mission.bilanRecommandations,
+            conclusion: mission.bilanConclusion,
+          }}
         />
       )}
 

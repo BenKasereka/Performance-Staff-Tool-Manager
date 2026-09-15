@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 !.env.example
+
+# Modèles et documents de référence (jamais versionnés)
+*.docx
+*.doc
