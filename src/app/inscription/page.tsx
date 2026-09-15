@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { FormulairePremierManager } from "./formulaire-premier-manager";
 
+// Le nombre de comptes doit être relu à chaque requête, jamais figé au build.
+export const dynamic = "force-dynamic";
+
 export default async function PageInscription() {
   // L'inscription libre n'est ouverte que pour créer le tout premier compte manager.
   // Ensuite, seuls les managers créent les comptes des membres.
