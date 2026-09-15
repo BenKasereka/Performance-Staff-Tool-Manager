@@ -1,7 +1,11 @@
 import type { Prisma } from "@prisma/client";
 
 import { exigerUtilisateur } from "@/lib/auth-guards";
-import { chargerMissionsOptions, chargerTaches } from "@/lib/donnees";
+import {
+  chargerMissionsOptions,
+  chargerTaches,
+  chargerTachesDuJour,
+} from "@/lib/donnees";
 import { intervalle, type Granularite } from "@/lib/dates";
 import { estEnRetard, statutAffiche } from "@/lib/taches";
 import { DialogueTache } from "@/components/dialogue-tache";
@@ -30,9 +34,8 @@ export default async function PageMesTaches({
   const statutFiltre = params.statut ? String(params.statut) : "";
 
   // Isolation : un membre ne lit jamais que les tâches qui lui sont assignées.
-  const where: Prisma.TaskWhereInput = {
+  const filtres: Prisma.TaskWhereInput = {
     assignes: { some: { userId: utilisateur.id } },
-    echeance: { gte: periode.debut, lte: periode.fin },
     ...(missionFiltre
       ? missionFiltre === "aucune"
         ? { missionId: null }
@@ -41,7 +44,12 @@ export default async function PageMesTaches({
   };
 
   const [tachesBrutes, missions] = await Promise.all([
-    chargerTaches(where),
+    granularite === "jour"
+      ? chargerTachesDuJour(periode, filtres)
+      : chargerTaches({
+          ...filtres,
+          echeance: { gte: periode.debut, lte: periode.fin },
+        }),
     chargerMissionsOptions(utilisateur.id),
   ]);
 

@@ -136,6 +136,17 @@ src/
 - **Le statut « en retard » n'est pas stocké en base.** Il est déduit de l'échéance
   et du statut à chaque lecture, pour qu'il ne puisse jamais se désynchroniser
   quand une échéance est prolongée.
+- **Le report quotidien ne réécrit jamais l'échéance.** Une tâche ouverte dont
+  l'échéance est passée remonte automatiquement dans la vue « Aujourd'hui »
+  jusqu'à ce qu'elle soit terminée ou annulée, avec le nombre de jours de report.
+  Repousser la date en base ferait afficher 100 % de ponctualité à tout le monde
+  en permanence et viderait le critère « respect des délais » de son sens.
+- **Le point de contact d'une tâche est déduit de l'organigramme** (le N+1 de la
+  personne assignée) plutôt que saisi sur la tâche : l'information reste juste
+  quand quelqu'un change d'équipe.
+- **Les rattachements hiérarchiques sont validés contre les cycles.** Le serveur
+  remonte toute la chaîne avant d'accepter un N+1, car un organigramme cyclique
+  ferait boucler indéfiniment le calcul des charges d'équipe.
 - **Le contrôle d'accès vit dans `proxy.ts`, sans Prisma.** Le runtime Edge de Vercel
   n'exécute pas Prisma : le rôle transite donc par le JWT de session.
 - **Les poids des 4 critères du score sont en base** (`KpiWeightConfig`) et non dans

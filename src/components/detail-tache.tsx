@@ -3,6 +3,7 @@ import type { Role } from "@prisma/client";
 
 import { formaterDate, formaterDateHeure } from "@/lib/dates";
 import {
+  joursDeReport,
   LIBELLES_PERIODICITE,
   livreeEnRetard,
   statutAffiche,
@@ -35,7 +36,18 @@ export async function DetailTache({ tacheId, utilisateur, retour }: Props) {
       mission: { select: { id: true, nom: true } },
       createur: { select: { nom: true } },
       evaluateur: { select: { nom: true } },
-      assignes: { include: { user: { select: { id: true, nom: true } } } },
+      assignes: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              nom: true,
+              service: true,
+              superieur: { select: { nom: true, poste: true } },
+            },
+          },
+        },
+      },
       commentaires: {
         include: { auteur: { select: { nom: true } } },
         orderBy: { createdAt: "asc" },
@@ -52,6 +64,18 @@ export async function DetailTache({ tacheId, utilisateur, retour }: Props) {
   }
 
   const enRetardLivraison = livreeEnRetard(tache);
+  const report = joursDeReport(tache);
+
+  // Le point de contact est le N+1 de la personne assignée : déduit de
+  // l'organigramme, il reste juste même si la personne change d'équipe.
+  const pointsDeContact = [
+    ...new Set(
+      tache.assignes
+        .map((a) => a.user.superieur)
+        .filter((s) => s !== null)
+        .map((s) => (s.poste ? `${s.nom} (${s.poste})` : s.nom)),
+    ),
+  ];
 
   return (
     <div className="space-y-6">
@@ -83,7 +107,15 @@ export async function DetailTache({ tacheId, utilisateur, retour }: Props) {
           <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-muted-foreground">Échéance</dt>
-              <dd>{formaterDate(tache.echeance)}</dd>
+              <dd>
+                {formaterDate(tache.echeance)}
+                {report > 0 && (
+                  <span className="block text-xs font-medium text-amber-700 dark:text-amber-400">
+                    Reportée {report} jour{report > 1 ? "s" : ""} — elle reste
+                    au planning du jour jusqu&apos;à sa clôture
+                  </span>
+                )}
+              </dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Périodicité</dt>
@@ -110,7 +142,27 @@ export async function DetailTache({ tacheId, utilisateur, retour }: Props) {
             </div>
             <div>
               <dt className="text-muted-foreground">Assignée à</dt>
-              <dd>{tache.assignes.map((a) => a.user.nom).join(", ")}</dd>
+              <dd>
+                {tache.assignes
+                  .map((a) =>
+                    a.user.service
+                      ? `${a.user.nom} (${a.user.service})`
+                      : a.user.nom,
+                  )
+                  .join(", ")}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Point de contact</dt>
+              <dd>
+                {pointsDeContact.length > 0 ? (
+                  pointsDeContact.join(", ")
+                ) : (
+                  <span className="text-muted-foreground">
+                    Aucun supérieur renseigné dans l&apos;organigramme
+                  </span>
+                )}
+              </dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Créée par</dt>

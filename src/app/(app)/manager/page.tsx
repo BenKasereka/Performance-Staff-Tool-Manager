@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { exigerManager } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { chargerTaches } from "@/lib/donnees";
+import { chargerTaches, chargerTachesDuJour } from "@/lib/donnees";
 import {
   missionsProchesDeLecheance,
   verifierMissionsEchues,
@@ -33,9 +33,9 @@ export default async function PageManager() {
   const [tachesSemaine, tachesJour, enRetard, missionsEnAttente, missionsProches, nbMembres] =
     await Promise.all([
       chargerTaches({ echeance: { gte: semaine.debut, lte: semaine.fin } }),
-      chargerTaches({ echeance: { gte: jour.debut, lte: jour.fin } }),
+      chargerTachesDuJour(jour),
       chargerTaches({
-        statut: { not: "TERMINEE" },
+        statut: { notIn: ["TERMINEE", "ANNULEE"] },
         echeance: { lt: new Date() },
       }),
       prisma.mission.findMany({

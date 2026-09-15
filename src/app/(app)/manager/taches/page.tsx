@@ -2,7 +2,12 @@ import type { Prisma } from "@prisma/client";
 
 import { exigerManager } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { chargerMembres, chargerMissionsOptions, chargerTaches } from "@/lib/donnees";
+import {
+  chargerMembres,
+  chargerMissionsOptions,
+  chargerTaches,
+  chargerTachesDuJour,
+} from "@/lib/donnees";
 import { intervalle, type Granularite } from "@/lib/dates";
 import { estEnRetard, statutAffiche } from "@/lib/taches";
 import { DialogueTache } from "@/components/dialogue-tache";
@@ -33,8 +38,7 @@ export default async function PageTaches({
   const statutFiltre = params.statut ? String(params.statut) : "";
   const origineFiltre = params.origine ? String(params.origine) : "";
 
-  const where: Prisma.TaskWhereInput = {
-    echeance: { gte: periode.debut, lte: periode.fin },
+  const filtres: Prisma.TaskWhereInput = {
     ...(membreFiltre ? { assignes: { some: { userId: membreFiltre } } } : {}),
     ...(missionFiltre
       ? missionFiltre === "aucune"
@@ -47,7 +51,14 @@ export default async function PageTaches({
   };
 
   const [tachesBrutes, membres, missions, toutesMissions] = await Promise.all([
-    chargerTaches(where),
+    // La vue du jour reporte les tâches ouvertes non clôturées ; les vues
+    // semaine et mois restent fidèles aux échéances réellement planifiées.
+    granularite === "jour"
+      ? chargerTachesDuJour(periode, filtres)
+      : chargerTaches({
+          ...filtres,
+          echeance: { gte: periode.debut, lte: periode.fin },
+        }),
     chargerMembres(),
     chargerMissionsOptions(),
     prisma.mission.findMany({

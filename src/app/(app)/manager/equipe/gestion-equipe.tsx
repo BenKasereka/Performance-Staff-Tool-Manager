@@ -7,6 +7,7 @@ import type { Role } from "@prisma/client";
 import {
   basculerActivation,
   creerMembre,
+  definirRattachement,
   reinitialiserMotDePasse,
 } from "@/lib/actions/equipe";
 import { useFormulaireAction } from "@/lib/use-formulaire-action";
@@ -29,10 +30,16 @@ type Membre = {
   nom: string;
   email: string;
   poste: string | null;
+  service: string | null;
   role: Role;
   actif: boolean;
-  _count: { tachesAssignees: number };
+  superieurId: string | null;
+  superieur: { nom: string } | null;
+  _count: { tachesAssignees: number; subordonnes: number };
 };
+
+const CLASSE_SELECT =
+  "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs";
 
 export function GestionEquipe({
   membres,
@@ -51,9 +58,21 @@ export function GestionEquipe({
     });
   }
 
+  const sansSuperieur = membres.filter(
+    (m) => !m.superieurId && m.role !== "MANAGER" && m.actif,
+  ).length;
+
   return (
     <div className="space-y-4">
-      <DialogueNouveauMembre />
+      <DialogueNouveauMembre membres={membres} />
+
+      {sansSuperieur > 0 && (
+        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          {sansSuperieur} personne{sansSuperieur > 1 ? "s" : ""} sans supérieur
+          hiérarchique. Renseignez le rattachement pour que leurs tâches aient un
+          point de contact.
+        </p>
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -80,11 +99,20 @@ export function GestionEquipe({
                   <p className="text-sm text-muted-foreground">
                     {membre.email}
                     {membre.poste && ` · ${membre.poste}`}
+                    {membre.service && ` · ${membre.service}`}
                     {` · ${membre._count.tachesAssignees} tâche${membre._count.tachesAssignees > 1 ? "s" : ""}`}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {membre.superieur
+                      ? `Rattaché à ${membre.superieur.nom}`
+                      : "Aucun supérieur renseigné"}
+                    {membre._count.subordonnes > 0 &&
+                      ` · encadre ${membre._count.subordonnes} personne${membre._count.subordonnes > 1 ? "s" : ""}`}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <DialogueRattachement membre={membre} membres={membres} />
                   <DialogueMotDePasse membre={membre} />
                   {membre.id !== managerId && (
                     <Button
@@ -106,7 +134,95 @@ export function GestionEquipe({
   );
 }
 
-function DialogueNouveauMembre() {
+function DialogueRattachement({
+  membre,
+  membres,
+}: {
+  membre: Membre;
+  membres: Membre[];
+}) {
+  const [ouvert, setOuvert] = useState(false);
+  const { erreur, enAttente, soumettre } = useFormulaireAction(
+    definirRattachement,
+    () => setOuvert(false),
+  );
+
+  // Se rattacher à soi-même est impossible ; les boucles plus profondes sont
+  // refusées côté serveur, qui remonte toute la chaîne hiérarchique.
+  const superieursPossibles = membres.filter((m) => m.id !== membre.id);
+
+  return (
+    <Dialog open={ouvert} onOpenChange={setOuvert}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          Rattachement
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Position dans l&apos;organigramme</DialogTitle>
+          <DialogDescription>{membre.nom}</DialogDescription>
+        </DialogHeader>
+
+        <form action={soumettre} className="space-y-4">
+          <input type="hidden" name="userId" value={membre.id} />
+
+          <div className="space-y-2">
+            <Label htmlFor={`sup-${membre.id}`}>Supérieur hiérarchique</Label>
+            <select
+              id={`sup-${membre.id}`}
+              name="superieurId"
+              defaultValue={membre.superieurId ?? ""}
+              className={CLASSE_SELECT}
+            >
+              <option value="">Aucun (sommet de l&apos;organigramme)</option>
+              {superieursPossibles.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nom}
+                  {m.poste ? ` — ${m.poste}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`poste-${membre.id}`}>Poste / fonction</Label>
+            <Input
+              id={`poste-${membre.id}`}
+              name="poste"
+              defaultValue={membre.poste ?? ""}
+              placeholder="Chargé de projet"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`service-${membre.id}`}>Service</Label>
+            <Input
+              id={`service-${membre.id}`}
+              name="service"
+              defaultValue={membre.service ?? ""}
+              placeholder="Opérations"
+            />
+          </div>
+
+          {erreur && (
+            <p className="text-sm text-destructive" role="alert">
+              {erreur}
+            </p>
+          )}
+
+          <DialogFooter>
+            <Button type="submit" disabled={enAttente}>
+              {enAttente ? "Enregistrement…" : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DialogueNouveauMembre({ membres }: { membres: Membre[] }) {
   const [ouvert, setOuvert] = useState(false);
   const { erreur, enAttente, soumettre } = useFormulaireAction(creerMembre, () =>
     setOuvert(false),
@@ -137,9 +253,33 @@ function DialogueNouveauMembre() {
             <Input id="email" name="email" type="email" required />
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="poste">Poste</Label>
+              <Input id="poste" name="poste" placeholder="Chargé de projet" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service">Service</Label>
+              <Input id="service" name="service" placeholder="Opérations" />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="poste">Poste (optionnel)</Label>
-            <Input id="poste" name="poste" placeholder="Chargé de projet" />
+            <Label htmlFor="superieurId">Supérieur hiérarchique</Label>
+            <select
+              id="superieurId"
+              name="superieurId"
+              defaultValue=""
+              className={CLASSE_SELECT}
+            >
+              <option value="">À définir plus tard</option>
+              {membres.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nom}
+                  {m.poste ? ` — ${m.poste}` : ""}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
@@ -148,7 +288,7 @@ function DialogueNouveauMembre() {
               id="role"
               name="role"
               defaultValue="MEMBER"
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              className={CLASSE_SELECT}
             >
               <option value="MEMBER">Membre</option>
               <option value="MANAGER">Manager</option>

@@ -10,13 +10,50 @@ const prisma = new PrismaClient({ adapter });
 const MOT_DE_PASSE_DEMO = "demo1234";
 const AUJOURDHUI = new Date();
 
+/** `superieur` référence l'email du N+1 ; null signifie rattaché au manager. */
 const EQUIPE = [
-  { nom: "Claire Dubois", email: "claire.dubois@demo.fr", poste: "Chargée de projet" },
-  { nom: "Marc Lefèvre", email: "marc.lefevre@demo.fr", poste: "Analyste" },
-  { nom: "Fatou Diallo", email: "fatou.diallo@demo.fr", poste: "Consultante" },
-  { nom: "Thomas Bernard", email: "thomas.bernard@demo.fr", poste: "Développeur" },
-  { nom: "Léa Moreau", email: "lea.moreau@demo.fr", poste: "Designer" },
-  { nom: "Yanis Benali", email: "yanis.benali@demo.fr", poste: "Support client" },
+  {
+    nom: "Claire Dubois",
+    email: "claire.dubois@demo.fr",
+    poste: "Cheffe de projet",
+    service: "Projets",
+    superieur: null,
+  },
+  {
+    nom: "Marc Lefèvre",
+    email: "marc.lefevre@demo.fr",
+    poste: "Responsable analyse",
+    service: "Études",
+    superieur: null,
+  },
+  {
+    nom: "Fatou Diallo",
+    email: "fatou.diallo@demo.fr",
+    poste: "Consultante",
+    service: "Études",
+    superieur: "marc.lefevre@demo.fr",
+  },
+  {
+    nom: "Thomas Bernard",
+    email: "thomas.bernard@demo.fr",
+    poste: "Développeur",
+    service: "Projets",
+    superieur: "claire.dubois@demo.fr",
+  },
+  {
+    nom: "Léa Moreau",
+    email: "lea.moreau@demo.fr",
+    poste: "Designer",
+    service: "Projets",
+    superieur: "claire.dubois@demo.fr",
+  },
+  {
+    nom: "Yanis Benali",
+    email: "yanis.benali@demo.fr",
+    poste: "Support client",
+    service: "Support",
+    superieur: "marc.lefevre@demo.fr",
+  },
 ];
 
 const POIDS_KPI = [
@@ -95,14 +132,27 @@ async function main() {
   });
 
   const membres = [];
-  for (const membre of EQUIPE) {
+  for (const { superieur: _superieur, ...membre } of EQUIPE) {
     membres.push(
       await prisma.user.upsert({
         where: { email: membre.email },
-        update: {},
+        update: { poste: membre.poste, service: membre.service },
         create: { ...membre, motDePasse: hash, role: "MEMBER" },
       }),
     );
+  }
+
+  // Rattachements dans un second temps : un N+1 doit exister avant d'être cité.
+  const parEmail = new Map(membres.map((m) => [m.email, m.id]));
+  for (const membre of EQUIPE) {
+    await prisma.user.update({
+      where: { email: membre.email },
+      data: {
+        superieurId: membre.superieur
+          ? parEmail.get(membre.superieur)
+          : manager.id,
+      },
+    });
   }
 
   for (const p of POIDS_KPI) {
@@ -253,6 +303,10 @@ async function main() {
             1,
             Math.min(5, profil.qualite + (alea() < 0.3 ? -1 : 0)),
           );
+        } else if (alea() < 0.15) {
+          // Quelques tâches abandonnées : elles ne sont ni en retard ni
+          // comptées dans la performance.
+          statut = "ANNULEE";
         } else {
           statut = alea() < 0.5 ? "EN_COURS" : "A_FAIRE";
         }

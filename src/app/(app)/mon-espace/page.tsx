@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { exigerUtilisateur } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { chargerTaches } from "@/lib/donnees";
+import { chargerTaches, chargerTachesDuJour } from "@/lib/donnees";
 import { formaterDate, intervalle } from "@/lib/dates";
 import { BadgeStatutTache } from "@/components/badges";
 import { Button } from "@/components/ui/button";
@@ -26,14 +26,14 @@ export default async function PageMonEspace() {
   const mien = { assignes: { some: { userId: utilisateur.id } } };
 
   const [tachesJour, tachesSemaine, enRetard, nbMissions] = await Promise.all([
-    chargerTaches({ ...mien, echeance: { gte: jour.debut, lte: jour.fin } }),
+    chargerTachesDuJour(jour, mien),
     chargerTaches({
       ...mien,
       echeance: { gte: semaine.debut, lte: semaine.fin },
     }),
     chargerTaches({
       ...mien,
-      statut: { not: "TERMINEE" },
+      statut: { notIn: ["TERMINEE", "ANNULEE"] },
       echeance: { lt: new Date() },
     }),
     prisma.mission.count({

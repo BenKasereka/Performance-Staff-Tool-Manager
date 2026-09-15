@@ -11,7 +11,7 @@ import {
   type Resultat,
 } from "@/lib/actions/taches";
 import { formaterDate } from "@/lib/dates";
-import { statutAffiche, LIBELLES_STATUT } from "@/lib/taches";
+import { joursDeReport, statutAffiche, LIBELLES_STATUT } from "@/lib/taches";
 import {
   BadgeOrigine,
   BadgePriorite,
@@ -64,6 +64,7 @@ const STATUTS: TaskStatut[] = [
   "EN_COURS",
   "EN_ATTENTE",
   "TERMINEE",
+  "ANNULEE",
 ];
 
 export function ListeTaches({
@@ -96,6 +97,7 @@ export function ListeTaches({
     <ul className="space-y-2">
       {taches.map((tache) => {
         const statut = statutAffiche(tache);
+        const report = joursDeReport(tache);
         const modifiable = estManager || tache.origine === "MEMBRE";
 
         return (
@@ -136,6 +138,13 @@ export function ListeTaches({
                     ` · ${tache.assignes.map((a) => a.nom).join(", ")}`}
                   {tache.noteQualite && ` · qualité ${tache.noteQualite}/5`}
                 </p>
+
+                {report > 0 && (
+                  <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                    Reportée depuis le {formaterDate(tache.echeance)} —{" "}
+                    {report} jour{report > 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
 
               <div className="flex shrink-0 items-center gap-2">

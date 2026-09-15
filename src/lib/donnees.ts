@@ -39,6 +39,37 @@ export async function chargerTaches(where: Prisma.TaskWhereInput) {
   return taches.map(versAffichage);
 }
 
+/**
+ * Tâches d'une journée, report compris.
+ *
+ * Une tâche ouverte dont l'échéance est passée se reporte sur la journée en cours
+ * jusqu'à ce qu'elle soit terminée ou annulée. Le report ne vaut que pour
+ * aujourd'hui : consulter une journée passée ou future montre ce qui y était
+ * réellement prévu.
+ */
+export async function chargerTachesDuJour(
+  jour: { debut: Date; fin: Date },
+  filtres: Prisma.TaskWhereInput = {},
+) {
+  const maintenant = new Date();
+  const estAujourdhui = jour.debut <= maintenant && maintenant <= jour.fin;
+
+  const where: Prisma.TaskWhereInput = estAujourdhui
+    ? {
+        ...filtres,
+        OR: [
+          { echeance: { gte: jour.debut, lte: jour.fin } },
+          {
+            echeance: { lt: jour.debut },
+            statut: { notIn: ["TERMINEE", "ANNULEE"] },
+          },
+        ],
+      }
+    : { ...filtres, echeance: { gte: jour.debut, lte: jour.fin } };
+
+  return chargerTaches(where);
+}
+
 export async function chargerMembres() {
   return prisma.user.findMany({
     where: { actif: true },

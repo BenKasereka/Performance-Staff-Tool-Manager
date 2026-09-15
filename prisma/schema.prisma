@@ -42,6 +42,7 @@ enum TaskStatut {
   EN_COURS
   EN_ATTENTE
   TERMINEE
+  ANNULEE
 }
 
 enum TaskOrigine {
@@ -82,9 +83,15 @@ model User {
   motDePasse   String
   role         Role     @default(MEMBER)
   poste        String?
+  service      String?
   actif        Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  // Organigramme : un seul supérieur hiérarchique (N+1) par personne.
+  superieurId String?
+  superieur   User?   @relation("Hierarchie", fields: [superieurId], references: [id], onDelete: SetNull)
+  subordonnes User[]  @relation("Hierarchie")
 
   missions          MissionMembre[]
   tachesAssignees   TaskAssignee[]
@@ -97,6 +104,7 @@ model User {
   piecesJointes     Attachment[]
 
   @@index([role])
+  @@index([superieurId])
 }
 
 model Mission {

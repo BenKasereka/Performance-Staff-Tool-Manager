@@ -179,8 +179,12 @@ export async function changerStatutTache(
     data: {
       statut,
       // dateFin sert au calcul de ponctualité : on la fige à la complétion et on
-      // l'efface si la tâche est rouverte.
+      // l'efface si la tâche est rouverte. Une tâche annulée n'a pas de date de
+      // livraison et sort des calculs de performance.
       dateFin: termine ? (tache.dateFin ?? new Date()) : null,
+      ...(statut === "ANNULEE"
+        ? { noteQualite: null, evaluateurId: null, dateEvaluation: null }
+        : {}),
     },
   });
 
