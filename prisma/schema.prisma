@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  MANAGER
+  MEMBER
+}
+
+enum MissionStatut {
+  EN_PREPARATION
+  ACTIVE
+  EN_ATTENTE_DECISION
+  CLOTUREE
+  ARCHIVEE
+}
+
+enum MissionType {
+  PROJET
+  CYCLE_RECURRENT
+}
+
+enum Periodicite {
+  JOURNALIERE
+  HEBDOMADAIRE
+  MENSUELLE
+  PONCTUELLE
+}
+
+enum Priorite {
+  BASSE
+  MOYENNE
+  HAUTE
+}
+
+enum TaskStatut {
+  A_FAIRE
+  EN_COURS
+  EN_ATTENTE
+  TERMINEE
+}
+
+enum TaskOrigine {
+  MANAGER
+  MEMBRE
+}
+
+enum RecurrenceFrequence {
+  QUOTIDIENNE
+  HEBDOMADAIRE
+  MENSUELLE
+}
+
+enum PeriodeType {
+  JOUR
+  SEMAINE
+  MOIS
+  MISSION
+}
+
+enum NotificationType {
+  TACHE_ASSIGNEE
+  TACHE_EN_RETARD
+  ECHEANCE_PROCHE
+  RECAP_QUOTIDIEN
+  RECAP_HEBDO
+  MISSION_FIN_PROCHE
+  MISSION_EN_ATTENTE_DECISION
+  MISSION_CLOTUREE
+  MISSION_PROLONGEE
+  COMMENTAIRE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nom          String
+  email        String   @unique
+  motDePasse   String
+  role         Role     @default(MEMBER)
+  poste        String?
+  actif        Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  missions          MissionMembre[]
+  tachesAssignees   TaskAssignee[]
+  tachesCreees      Task[]              @relation("TaskCreateur")
+  notesQualite      Task[]              @relation("TaskEvaluateur")
+  commentaires      Comment[]
+  scores            PerformanceScore[]
+  notifications     Notification[]
+  prolongations     MissionProlongation[] @relation("ProlongationAuteur")
+  piecesJointes     Attachment[]
+
+  @@index([role])
+}
+
+model Mission {
+  id           String        @id @default(cuid())
+  nom          String
+  description  String?
+  type         MissionType   @default(PROJET)
+  statut       MissionStatut @default(EN_PREPARATION)
+
+  dateDebut         DateTime
+  dateFinInitiale   DateTime
+  dateFinActuelle   DateTime
+  dateCloture       DateTime?
+
+  bilanQualitatifManager String?
+
+  // Suivi des alertes de fin de mission (évite les doublons d'envoi)
+  alerteJ3EnvoyeeLe        DateTime?
+  dernierRappelDecisionLe  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  membres       MissionMembre[]
+  taches        Task[]
+  prolongations MissionProlongation[]
+  scores        PerformanceScore[]
+
+  @@index([statut])
+  @@index([dateFinActuelle])
+}
+
+model MissionMembre {
+  id        String   @id @default(cuid())
+  missionId String
+  userId    String
+  ajouteLe  DateTime @default(now())
+
+  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([missionId, userId])
+  @@index([userId])
+}
+
+model MissionProlongation {
+  id               String   @id @default(cuid())
+  missionId        String
+  dateDemande      DateTime @default(now())
+  ancienneEcheance DateTime
+  nouvelleEcheance DateTime
+  motif            String?
+  auteurId         String?
+
+  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  auteur  User?   @relation("ProlongationAuteur", fields: [auteurId], references: [id], onDelete: SetNull)
+
+  @@index([missionId])
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  titre       String
+  description String?
+  missionId   String?
+  periodicite Periodicite @default(PONCTUELLE)
+  echeance    DateTime
+  priorite    Priorite    @default(MOYENNE)
+  statut      TaskStatut  @default(A_FAIRE)
+  origine     TaskOrigine @default(MANAGER)
+
+  createurId   String
+  dateFin      DateTime? // date effective de passage au statut TERMINEE
+
+  // Évaluation qualité par le manager
+  noteQualite       Int?
+  commentaireQualite String?
+  evaluateurId      String?
+  dateEvaluation    DateTime?
+
+  // Récurrence
+  recurrenceActive     Boolean              @default(false)
+  recurrenceFrequence  RecurrenceFrequence?
+  recurrenceFinLe      DateTime?
+  tacheModeleId        String? // tâche d'origine ayant généré cette occurrence
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mission     Mission?     @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  createur    User         @relation("TaskCreateur", fields: [createurId], references: [id], onDelete: Cascade)
+  evaluateur  User?        @relation("TaskEvaluateur", fields: [evaluateurId], references: [id], onDelete: SetNull)
+  assignes    TaskAssignee[]
+  commentaires Comment[]
+  piecesJointes Attachment[]
+
+  tacheModele  Task?  @relation("TaskRecurrence", fields: [tacheModeleId], references: [id], onDelete: SetNull)
+  occurrences  Task[] @relation("TaskRecurrence")
+
+  @@index([missionId])
+  @@index([statut])
+  @@index([echeance])
+}
+
+model TaskAssignee {
+  id     String @id @default(cuid())
+  taskId String
+  userId String
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([userId])
+}
+
+model Comment {
+  id       String   @id @default(cuid())
+  taskId   String
+  auteurId String
+  contenu  String
+  createdAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  auteur User @relation(fields: [auteurId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  taskId    String
+  url       String
+  nom       String
+  taille    Int?
+  mimeType  String?
+  uploadePar String?
+  createdAt DateTime @default(now())
+
+  task     Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadeur User? @relation(fields: [uploadePar], references: [id], onDelete: SetNull)
+
+  @@index([taskId])
+}
+
+model PerformanceScore {
+  id     String @id @default(cuid())
+  userId String
+
+  periodeType  PeriodeType
+  periodeDebut DateTime
+  periodeFin   DateTime
+  missionId    String?
+
+  tauxCompletion    Float // 0-100
+  ponctualite       Float // 0-100
+  noteQualiteMoyenne Float // 0-100 (note /5 normalisée)
+  volume            Float // 0-100 (normalisé vs moyenne équipe)
+  scoreGlobal       Float // 0-100
+
+  nbTachesTotal    Int @default(0)
+  nbTachesTerminees Int @default(0)
+  nbTachesEnRetard Int @default(0)
+
+  calculeLe DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission Mission? @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, periodeType, periodeDebut, periodeFin, missionId])
+  @@index([userId, periodeType])
+}
+
+model Notification {
+  id       String           @id @default(cuid())
+  userId   String
+  type     NotificationType
+  titre    String
+  contenu  String
+  lien     String?
+  lu       Boolean          @default(false)
+  emailEnvoye Boolean       @default(false)
+  createdAt DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lu])
+}
+
+model KpiWeightConfig {
+  id      String @id @default(cuid())
+  critere String @unique // "tauxCompletion" | "ponctualite" | "noteQualite" | "volume"
+  libelle String
+  poids   Float  @default(0.25)
+  updatedAt DateTime @updatedAt
+}
