@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import type { Role, TaskStatut } from "@prisma/client";
@@ -105,7 +106,12 @@ export function ListeTaches({
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{tache.titre}</span>
+                  <Link
+                    href={`${estManager ? "/manager" : "/mon-espace"}/taches/${tache.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {tache.titre}
+                  </Link>
                   <BadgeStatutTache statut={statut} />
                   <BadgePriorite priorite={tache.priorite} />
                   {estManager && <BadgeOrigine origine={tache.origine} />}
