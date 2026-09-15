@@ -2,6 +2,12 @@ import Link from "next/link";
 import type { Role } from "@prisma/client";
 
 import { signOut } from "@/auth";
+import { chargerNotifications, compterNonLues } from "@/lib/notifications";
+import { formaterDateHeure } from "@/lib/dates";
+import {
+  CentreNotifications,
+  type NotificationAffichee,
+} from "@/components/centre-notifications";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type Props = {
-  utilisateur: { nom: string; email?: string | null; role: Role };
+  utilisateur: { id: string; nom: string; email?: string | null; role: Role };
   children: React.ReactNode;
 };
 
@@ -32,7 +38,22 @@ const LIENS_MEMBRE = [
   { href: "/mon-espace/missions", libelle: "Mes missions" },
 ];
 
-export function AppShell({ utilisateur, children }: Props) {
+export async function AppShell({ utilisateur, children }: Props) {
+  const [brutes, nonLues] = await Promise.all([
+    chargerNotifications(utilisateur.id),
+    compterNonLues(utilisateur.id),
+  ]);
+
+  const notifications: NotificationAffichee[] = brutes.map((n) => ({
+    id: n.id,
+    type: n.type,
+    titre: n.titre,
+    contenu: n.contenu,
+    lien: n.lien,
+    lu: n.lu,
+    quand: formaterDateHeure(n.createdAt),
+  }));
+
   const liens =
     utilisateur.role === "MANAGER" ? LIENS_MANAGER : LIENS_MEMBRE;
   const initiales = utilisateur.nom
@@ -58,7 +79,11 @@ export function AppShell({ utilisateur, children }: Props) {
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1">
+            <CentreNotifications
+              notifications={notifications}
+              nonLues={nonLues}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">

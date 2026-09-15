@@ -5,6 +5,8 @@ import { addDays, addMonths, addWeeks, endOfDay } from "date-fns";
 import { z } from "zod";
 
 import { exigerManager } from "@/lib/auth-guards";
+import { notifierPlusieurs } from "@/lib/notifications";
+import { formaterDate } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 
 export type Resultat = { erreur?: string; succes?: string } | undefined;
@@ -204,6 +206,21 @@ export async function prolongerMission(
     }),
   ]);
 
+  const membresProlongation = await prisma.missionMembre.findMany({
+    where: { missionId: mission.id },
+    select: { userId: true },
+  });
+  await notifierPlusieurs(
+    membresProlongation.map((m) => m.userId),
+    {
+      type: "MISSION_PROLONGEE",
+      titre: `Mission prolongée : ${mission.nom}`,
+      contenu: `La nouvelle échéance est le ${formaterDate(nouvelle)}.${parsed.data.motif ? ` Motif : ${parsed.data.motif}` : ""}`,
+      lien: "/mon-espace/missions",
+      email: true,
+    },
+  );
+
   revalidatePath("/manager");
   revalidatePath("/manager/missions");
   revalidatePath(`/manager/missions/${mission.id}`);
@@ -223,6 +240,21 @@ export async function cloturerMission(missionId: string): Promise<Resultat> {
     where: { id: missionId },
     data: { statut: "CLOTUREE", dateCloture: new Date() },
   });
+
+  const membres = await prisma.missionMembre.findMany({
+    where: { missionId },
+    select: { userId: true },
+  });
+  await notifierPlusieurs(
+    membres.map((m) => m.userId),
+    {
+      type: "MISSION_CLOTUREE",
+      titre: `Mission clôturée : ${mission.nom}`,
+      contenu: "La mission est terminée. Merci pour votre travail.",
+      lien: "/mon-espace/missions",
+      email: true,
+    },
+  );
 
   revalidatePath("/manager");
   revalidatePath("/manager/missions");

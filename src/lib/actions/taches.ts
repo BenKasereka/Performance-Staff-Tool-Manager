@@ -6,6 +6,8 @@ import { z } from "zod";
 import type { RecurrenceFrequence, Task, TaskStatut } from "@prisma/client";
 
 import { exigerUtilisateur } from "@/lib/auth-guards";
+import { notifierPlusieurs } from "@/lib/notifications";
+import { formaterDate } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 
 export type Resultat = { erreur?: string; succes?: string } | undefined;
@@ -76,7 +78,7 @@ export async function creerTache(
     return { erreur: "Mission introuvable." };
   }
 
-  await prisma.task.create({
+  const tache = await prisma.task.create({
     data: {
       titre: parsed.data.titre,
       description: parsed.data.description,
@@ -94,6 +96,18 @@ export async function creerTache(
       assignes: { create: assignes.map((userId) => ({ userId })) },
     },
   });
+
+  // On ne se notifie pas soi-même : une tâche auto-déclarée ne déclenche rien.
+  const aPrevenir = assignes.filter((id) => id !== utilisateur.id);
+  if (aPrevenir.length > 0) {
+    await notifierPlusieurs(aPrevenir, {
+      type: "TACHE_ASSIGNEE",
+      titre: `Nouvelle tâche : ${tache.titre}`,
+      contenu: `${utilisateur.nom} vous a assigné cette tâche, à rendre pour le ${formaterDate(tache.echeance)}.`,
+      lien: `/mon-espace/taches/${tache.id}`,
+      email: true,
+    });
+  }
 
   revaliderVues(mission?.id);
   return { succes: "Tâche créée." };
@@ -276,6 +290,21 @@ export async function ajouterCommentaire(
   await prisma.comment.create({
     data: { taskId: tacheId, auteurId: utilisateur.id, contenu },
   });
+
+  // Préviennent les assignés et le créateur, sauf l'auteur du commentaire.
+  const concernes = [
+    ...tache.assignes.map((a) => a.userId),
+    tache.createurId,
+  ].filter((id) => id !== utilisateur.id);
+
+  if (concernes.length > 0) {
+    await notifierPlusieurs(concernes, {
+      type: "COMMENTAIRE",
+      titre: `Commentaire sur « ${tache.titre} »`,
+      contenu: `${utilisateur.nom} : ${contenu.slice(0, 200)}`,
+      lien: `/mon-espace/taches/${tacheId}`,
+    });
+  }
 
   revalidatePath(`/manager/taches/${tacheId}`);
   revalidatePath(`/mon-espace/taches/${tacheId}`);
