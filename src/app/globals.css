@@ -175,6 +175,24 @@
   --border: oklch(1 0 0 / 14%);
   --ring: var(--success);
 }
+
+/* Bandeau de titre de page : vert forêt pleine largeur, comme l'en-tête de
+   navigation mais accroché au primary plutôt qu'au header — le reste de la
+   page (tableaux, formulaires) reste sur fond crème clair pour la lisibilité. */
+.section-heros {
+  --background: var(--primary);
+  --foreground: var(--primary-foreground);
+  --muted: oklch(1 0 0 / 12%);
+  --muted-foreground: oklch(1 0 0 / 72%);
+  --secondary: oklch(1 0 0 / 18%);
+  --secondary-foreground: var(--primary-foreground);
+  --accent: oklch(1 0 0 / 14%);
+  --accent-foreground: var(--primary-foreground);
+  --border: oklch(1 0 0 / 18%);
+  --destructive: #ffb4c0;
+  --destructive-foreground: #3a0510;
+  --ring: var(--info);
+}
 /* Jetons de visualisation de données — palette validée pour la vision des
    couleurs (deutan/tritan) sur les deux surfaces. */
 :root {
