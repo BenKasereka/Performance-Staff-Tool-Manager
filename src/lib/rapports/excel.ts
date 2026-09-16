@@ -4,6 +4,7 @@ import { LIBELLES_CRITERE } from "@/lib/kpi";
 import { formaterDate } from "@/lib/dates";
 import type { RapportIndividuel, RapportMandat, RapportMission } from "./donnees";
 import type { RapportRaci } from "./raci";
+import type { CleSectionMandat } from "./sections-mandat";
 
 const ENTETE_FOND = "FF0B0B0B";
 const ENTETE_TEXTE = "FFFFFFFF";
@@ -240,114 +241,132 @@ export async function excelMandat(rapport: RapportMandat): Promise<Buffer> {
   const bilan = synthese.addRow([rapport.bilan.qualitatif ?? "—"]);
   bilan.alignment = { wrapText: true, vertical: "top" };
 
-  if (rapport.realisations.length > 0) {
-    const realisations = classeur.addWorksheet("Grandes réalisations");
-    ajusterColonnes(realisations, [40, 22, 22, 10]);
-    styliserEntete(
-      realisations.addRow(["Tâche", "Activité", "Réalisée par", "Note"]),
-    );
-    for (const t of rapport.realisations) {
-      realisations.addRow([t.titre, t.mission, t.assignes, t.noteQualite]);
-    }
-  }
+  // Une feuille par section narrative configurable (cf. sections-mandat.ts) :
+  // seules celles choisies par le manager sont ajoutées, dans l'ordre choisi —
+  // même logique que le PDF. La Synthèse et l'annexe Tâches restent fixes.
+  const constructeursSection: Partial<
+    Record<CleSectionMandat, (classeur: ExcelJS.Workbook, rapport: RapportMandat) => void>
+  > = {
+    realisations(classeur, rapport) {
+      if (rapport.realisations.length === 0) return;
+      const realisations = classeur.addWorksheet("Grandes réalisations");
+      ajusterColonnes(realisations, [40, 22, 22, 10]);
+      styliserEntete(
+        realisations.addRow(["Tâche", "Activité", "Réalisée par", "Note"]),
+      );
+      for (const t of rapport.realisations) {
+        realisations.addRow([t.titre, t.mission, t.assignes, t.noteQualite]);
+      }
+    },
 
-  if (rapport.rubriques.length > 0) {
-    const rubriques = classeur.addWorksheet("Rubriques complémentaires");
-    ajusterColonnes(rubriques, [30, 70]);
-    styliserEntete(rubriques.addRow(["Rubrique", "Contenu"]));
-    for (const r of rapport.rubriques) {
-      const ligne = rubriques.addRow([r.titre, r.contenu ?? "—"]);
-      ligne.alignment = { wrapText: true, vertical: "top" };
-    }
-  }
+    rubriques(classeur, rapport) {
+      if (rapport.rubriques.length === 0) return;
+      const rubriques = classeur.addWorksheet("Rubriques complémentaires");
+      ajusterColonnes(rubriques, [30, 70]);
+      styliserEntete(rubriques.addRow(["Rubrique", "Contenu"]));
+      for (const r of rapport.rubriques) {
+        const ligne = rubriques.addRow([r.titre, r.contenu ?? "—"]);
+        ligne.alignment = { wrapText: true, vertical: "top" };
+      }
+    },
 
-  const membres = classeur.addWorksheet("Performance par membre");
-  ajusterColonnes(membres, [6, 26, 20, 10, 12, 10, 10, 10, 10]);
-  styliserEntete(
-    membres.addRow([
-      "Rang",
-      "Membre",
-      "Poste",
-      "Score",
-      "Complétion",
-      "Délais",
-      "Qualité",
-      "Terminées",
-      "Exigibles",
-    ]),
-  );
-  rapport.parMembre.forEach((m, i) => {
-    membres.addRow([
-      i + 1,
-      m.nom,
-      m.poste ?? "—",
-      m.scoreGlobal,
-      m.tauxCompletion,
-      m.ponctualite,
-      m.qualiteNonEvaluee ? "—" : m.noteMoyenneSur5,
-      m.nbTachesTerminees,
-      m.nbTachesExigibles,
-    ]);
-  });
+    performance(classeur, rapport) {
+      const membres = classeur.addWorksheet("Performance par membre");
+      ajusterColonnes(membres, [6, 26, 20, 10, 12, 10, 10, 10, 10]);
+      styliserEntete(
+        membres.addRow([
+          "Rang",
+          "Membre",
+          "Poste",
+          "Score",
+          "Complétion",
+          "Délais",
+          "Qualité",
+          "Terminées",
+          "Exigibles",
+        ]),
+      );
+      rapport.parMembre.forEach((m, i) => {
+        membres.addRow([
+          i + 1,
+          m.nom,
+          m.poste ?? "—",
+          m.scoreGlobal,
+          m.tauxCompletion,
+          m.ponctualite,
+          m.qualiteNonEvaluee ? "—" : m.noteMoyenneSur5,
+          m.nbTachesTerminees,
+          m.nbTachesExigibles,
+        ]);
+      });
 
-  const suspens = classeur.addWorksheet("Checklist de passation");
-  ajusterColonnes(suspens, [40, 22, 22, 14, 12, 14]);
-  styliserEntete(
-    suspens.addRow([
-      "Activité",
-      "Rattachée à",
-      "Responsable",
-      "Échéance",
-      "Priorité",
-      "Statut",
-    ]),
-  );
-  for (const a of rapport.enSuspens) {
-    const ligne = suspens.addRow([
-      a.titre,
-      a.activite,
-      a.responsable,
-      a.echeance,
-      a.priorite,
-      a.statut,
-    ]);
-    if (a.enRetard) {
-      ligne.getCell(4).font = { color: { argb: "FFD03B3B" }, bold: true };
-    }
-  }
+      const avancement = classeur.addWorksheet("Avancement");
+      ajusterColonnes(avancement, [20, 18]);
+      styliserEntete(avancement.addRow(["Période", "Complétion (%)"]));
+      for (const p of rapport.avancement) {
+        avancement.addRow([p.periode, p.completion]);
+      }
+    },
 
-  if (rapport.prolongations.length > 0) {
-    const prolongations = classeur.addWorksheet("Prolongations");
-    ajusterColonnes(prolongations, [22, 16, 16, 16, 14, 22, 44]);
-    styliserEntete(
-      prolongations.addRow([
-        "Activité",
-        "Décidée le",
-        "Ancienne échéance",
-        "Nouvelle échéance",
-        "Jours ajoutés",
-        "Auteur",
-        "Motif",
-      ]),
-    );
-    for (const p of rapport.prolongations) {
-      prolongations.addRow([
-        p.activite,
-        p.date,
-        p.ancienne,
-        p.nouvelle,
-        p.joursAjoutes,
-        p.auteur ?? "—",
-        p.motif ?? "—",
-      ]);
-    }
-  }
+    checklist(classeur, rapport) {
+      const suspens = classeur.addWorksheet("Checklist de passation");
+      ajusterColonnes(suspens, [40, 22, 22, 14, 12, 14]);
+      styliserEntete(
+        suspens.addRow([
+          "Activité",
+          "Rattachée à",
+          "Responsable",
+          "Échéance",
+          "Priorité",
+          "Statut",
+        ]),
+      );
+      for (const a of rapport.enSuspens) {
+        const ligne = suspens.addRow([
+          a.titre,
+          a.activite,
+          a.responsable,
+          a.echeance,
+          a.priorite,
+          a.statut,
+        ]);
+        if (a.enRetard) {
+          ligne.getCell(4).font = { color: { argb: "FFD03B3B" }, bold: true };
+        }
+      }
+    },
 
-  const avancement = classeur.addWorksheet("Avancement");
-  ajusterColonnes(avancement, [20, 18]);
-  styliserEntete(avancement.addRow(["Période", "Complétion (%)"]));
-  for (const p of rapport.avancement) {
-    avancement.addRow([p.periode, p.completion]);
+    prolongations(classeur, rapport) {
+      if (rapport.prolongations.length === 0) return;
+      const prolongations = classeur.addWorksheet("Prolongations");
+      ajusterColonnes(prolongations, [22, 16, 16, 16, 14, 22, 44]);
+      styliserEntete(
+        prolongations.addRow([
+          "Activité",
+          "Décidée le",
+          "Ancienne échéance",
+          "Nouvelle échéance",
+          "Jours ajoutés",
+          "Auteur",
+          "Motif",
+        ]),
+      );
+      for (const p of rapport.prolongations) {
+        prolongations.addRow([
+          p.activite,
+          p.date,
+          p.ancienne,
+          p.nouvelle,
+          p.joursAjoutes,
+          p.auteur ?? "—",
+          p.motif ?? "—",
+        ]);
+      }
+    },
+  };
+
+  for (const cle of rapport.sectionsIncluses) {
+    constructeursSection[cle]?.(classeur, rapport);
   }
 
   ajouterFeuilleTaches(classeur, rapport.taches);
