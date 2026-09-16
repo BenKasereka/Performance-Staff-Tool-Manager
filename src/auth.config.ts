@@ -5,6 +5,11 @@ import type { NextAuthConfig } from "next-auth";
  * Les providers qui touchent la base sont ajoutés dans src/auth.ts uniquement.
  */
 export const authConfig = {
+  // Sans ça, Auth.js rejette toute requête dont l'hôte ne correspond pas
+  // exactement à AUTH_URL — trop fragile sur Vercel (domaine de prod,
+  // alias, previews...). Vercel gère déjà le TLS et les en-têtes
+  // X-Forwarded-*, donc faire confiance à l'hôte transmis est sûr ici.
+  trustHost: true,
   pages: {
     signIn: "/connexion",
   },
