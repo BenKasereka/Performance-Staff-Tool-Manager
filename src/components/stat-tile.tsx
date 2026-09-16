@@ -5,7 +5,7 @@ export type ToneStatTile = "neutral" | "info" | "success" | "warning" | "destruc
 
 const FOND: Record<ToneStatTile, string> = {
   neutral: "",
-  info: "border-primary/25 bg-primary/[0.06]",
+  info: "border-info/25 bg-info/[0.06]",
   success: "border-success/25 bg-success/[0.06]",
   warning: "border-warning/25 bg-warning/[0.06]",
   destructive: "border-destructive/25 bg-destructive/[0.06]",
@@ -13,7 +13,7 @@ const FOND: Record<ToneStatTile, string> = {
 
 const TEXTE: Record<ToneStatTile, string> = {
   neutral: "",
-  info: "text-primary",
+  info: "text-info",
   success: "text-success",
   warning: "text-warning",
   destructive: "text-destructive",
@@ -34,7 +34,7 @@ export function StatTile({
     <Card className={cn(FOND[tone], className)}>
       <CardHeader className="pb-2">
         <CardDescription>{libelle}</CardDescription>
-        <CardTitle className={cn("text-3xl tabular-nums", TEXTE[tone])}>
+        <CardTitle className={cn("text-3xl font-bold tabular-nums", TEXTE[tone])}>
           {valeur}
         </CardTitle>
       </CardHeader>

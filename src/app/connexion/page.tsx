@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
+import { Blob } from "@/components/blob";
 import { FormulaireConnexion } from "./formulaire-connexion";
 
 export default async function PageConnexion({
@@ -11,8 +12,11 @@ export default async function PageConnexion({
   const aucunUtilisateur = (await prisma.user.count()) === 0;
 
   return (
-    <main className="flex flex-1 items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-6">
+    <main className="relative flex flex-1 items-center justify-center overflow-hidden p-4">
+      <Blob className="absolute -top-24 -left-28 size-80 text-primary/[0.08]" />
+      <Blob className="absolute -right-24 -bottom-28 size-96 text-accent/60 rotate-45" />
+
+      <div className="relative w-full max-w-sm space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             Suivi de Performance d&apos;Équipe
