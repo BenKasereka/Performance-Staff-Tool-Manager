@@ -19,6 +19,7 @@ import {
 } from "@/components/graphiques/repartition-statuts";
 import { SelecteurPeriode } from "@/components/selecteur-periode";
 import { FiltreActivite } from "@/components/filtre-activite";
+import { StatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -105,31 +106,22 @@ export default async function PagePerformance({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Score moyen de l&apos;équipe</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
+        <StatTile
+          libelle="Score moyen de l'équipe"
+          tone="info"
+          valeur={
+            <>
               {moyenneEquipe}
               <span className="text-base text-muted-foreground"> / 100</span>
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Membres évalués</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
-              {classement.length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Meilleur score</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
-              {classement[0]?.scoreGlobal ?? 0}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+            </>
+          }
+        />
+        <StatTile libelle="Membres évalués" valeur={classement.length} tone="neutral" />
+        <StatTile
+          libelle="Meilleur score"
+          valeur={classement[0]?.scoreGlobal ?? 0}
+          tone="success"
+        />
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Période</CardDescription>

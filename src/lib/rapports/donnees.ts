@@ -6,6 +6,7 @@ import { estEnRetard, livreeEnRetard, LIBELLES_STATUT, statutAffiche } from "@/l
 import { formaterDate, intervalle, type Granularite } from "@/lib/dates";
 import { construireOrganigramme, type NoeudOrganigramme } from "@/lib/organigramme";
 import { LIBELLES_STATUT_MISSION, LIBELLES_TYPE_MISSION } from "@/lib/missions";
+import { resoudreOrdreSections, type CleSectionMandat } from "@/lib/rapports/sections-mandat";
 
 export type LigneTacheRapport = {
   titre: string;
@@ -420,7 +421,11 @@ export type RapportMandat = {
     auteur: string | null;
     activite: string;
   }[];
+  /** Meilleures tâches de la période — livrées à temps et notées 4/5 ou plus. */
+  realisations: LigneTacheRapport[];
   taches: LigneTacheRapport[];
+  /** Ordre et sélection des sections narratives, choisis par le manager. */
+  sectionsIncluses: CleSectionMandat[];
   genereLe: Date;
 };
 
@@ -463,6 +468,12 @@ export async function construireRapportMandat(
   const enRetard = retenues.filter((t) => estEnRetard(t));
   const aLheure = terminees.filter((t) => !livreeEnRetard(t));
   const notees = terminees.filter((t) => t.noteQualite);
+
+  const realisations = [...terminees]
+    .filter((t) => (t.noteQualite ?? 0) >= 4 && !livreeEnRetard(t))
+    .sort((a, b) => (b.noteQualite ?? 0) - (a.noteQualite ?? 0))
+    .slice(0, 8)
+    .map(versLigne);
 
   const parMembre = await calculerScores({
     debut: periodeDebut,
@@ -579,6 +590,8 @@ export async function construireRapportMandat(
         activite: m.nom,
       })),
     ),
+    realisations,
+    sectionsIncluses: resoudreOrdreSections(rapport?.sectionsIncluses),
     taches: taches.map(versLigne),
     genereLe: new Date(),
   };

@@ -68,8 +68,16 @@ export async function AppShell({ utilisateur, children }: Props) {
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="sticky top-0 z-30 border-b bg-background">
+        <div
+          aria-hidden
+          className="h-[3px] w-full bg-[linear-gradient(90deg,var(--primary),var(--success),var(--destructive))]"
+        />
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4">
-          <Link href="/" className="font-semibold tracking-tight">
+          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            <span
+              aria-hidden
+              className="inline-block size-2 rounded-full bg-primary"
+            />
             Performance<span className="text-muted-foreground">.équipe</span>
           </Link>
 

@@ -11,6 +11,7 @@ import { estEnRetard, livreeEnRetard } from "@/lib/taches";
 import { BadgeStatutTache } from "@/components/badges";
 import { BoutonsRapport } from "@/components/boutons-rapport";
 import { CourbeEvolution } from "@/components/graphiques/courbe-evolution";
+import { StatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -114,15 +115,17 @@ export default async function PageMembrePerformance({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-2">
-            <CardDescription>Score du mois</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
+        <StatTile
+          className="lg:col-span-1"
+          libelle="Score du mois"
+          tone="info"
+          valeur={
+            <>
               {scoreMois?.scoreGlobal ?? 0}
               <span className="text-base text-muted-foreground"> / 100</span>
-            </CardTitle>
-          </CardHeader>
-        </Card>
+            </>
+          }
+        />
 
         {criteres.map((c) => (
           <Card key={c.cle}>

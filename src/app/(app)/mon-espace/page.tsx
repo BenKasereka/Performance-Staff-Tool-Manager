@@ -7,6 +7,7 @@ import { chargerTaches, chargerTachesDuJour } from "@/lib/donnees";
 import { formaterDate, formaterDateCourte, intervalle } from "@/lib/dates";
 import { BadgeStatutTache } from "@/components/badges";
 import { CourbeEvolution } from "@/components/graphiques/courbe-evolution";
+import { StatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -68,38 +69,14 @@ export default async function PageMonEspace() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Tâches aujourd&apos;hui</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
-              {tachesJour.length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Cette semaine</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">
-              {tachesSemaine.length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>En retard</CardDescription>
-            <CardTitle
-              className={`text-3xl tabular-nums ${enRetard.length > 0 ? "text-destructive" : ""}`}
-            >
-              {enRetard.length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Activités en cours</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">{nbMissions}</CardTitle>
-          </CardHeader>
-        </Card>
+        <StatTile libelle="Tâches aujourd'hui" valeur={tachesJour.length} tone="info" />
+        <StatTile libelle="Cette semaine" valeur={tachesSemaine.length} tone="info" />
+        <StatTile
+          libelle="En retard"
+          valeur={enRetard.length}
+          tone={enRetard.length > 0 ? "destructive" : "neutral"}
+        />
+        <StatTile libelle="Activités en cours" valeur={nbMissions} tone="neutral" />
       </div>
 
       <Card>

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { exigerManager } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { validerOrdreSections } from "@/lib/rapports/sections-mandat";
 
 export type Resultat = { erreur?: string; succes?: string } | undefined;
 
@@ -25,6 +26,7 @@ const schema = z
     bilanConclusion: z.string().optional(),
     informationsPratiques: z.string().optional(),
     rubriques: z.array(schemaRubrique),
+    sectionsIncluses: z.array(z.string()),
   })
   .refine((d) => d.periodeFin >= d.periodeDebut, {
     message: "La date de fin doit suivre la date de début du mandat",
@@ -39,6 +41,13 @@ function lireFormulaire(donnees: FormData) {
     rubriques = [];
   }
 
+  let sectionsIncluses: unknown = [];
+  try {
+    sectionsIncluses = JSON.parse(String(donnees.get("sectionsIncluses") || "[]"));
+  } catch {
+    sectionsIncluses = [];
+  }
+
   return schema.safeParse({
     periodeDebut: donnees.get("periodeDebut"),
     periodeFin: donnees.get("periodeFin"),
@@ -50,6 +59,7 @@ function lireFormulaire(donnees: FormData) {
     bilanConclusion: donnees.get("bilanConclusion") || undefined,
     informationsPratiques: donnees.get("informationsPratiques") || undefined,
     rubriques,
+    sectionsIncluses,
   });
 }
 
@@ -82,6 +92,7 @@ export async function sauvegarderRapportMandat(
     bilanRecommandations: d.bilanRecommandations || null,
     bilanConclusion: d.bilanConclusion || null,
     informationsPratiques: d.informationsPratiques || null,
+    sectionsIncluses: validerOrdreSections(d.sectionsIncluses),
     genereLe: new Date(),
   };
 

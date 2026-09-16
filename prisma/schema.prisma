@@ -330,6 +330,13 @@ model RapportMandat {
   bilanConclusion       String?
   informationsPratiques String?
 
+  /**
+   * Ordre et sélection des sections narratives du rapport, choisis par le
+   * manager (cf. src/lib/rapports/sections-mandat.ts pour les clés valides).
+   * Vide = ordre par défaut.
+   */
+  sectionsIncluses String[] @default([])
+
   genereLe  DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

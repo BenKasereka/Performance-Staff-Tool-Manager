@@ -5,6 +5,7 @@ import type { RapportMandat } from "./donnees";
 import { CourbePdf } from "./graphique-pdf";
 import { ALERTE, ENCRE_MUETTE, styles } from "./styles-pdf";
 import { BlocBilan, Carte, LigneIdentite, PiedDePage } from "./pdf-mission";
+import { LIBELLES_SECTION_MANDAT, type CleSectionMandat } from "./sections-mandat";
 
 /** Synthèse écrite à partir des seuls chiffres, sans jugement inventé. */
 function resumeExecutif(r: RapportMandat) {
@@ -44,33 +45,497 @@ function recapSuspens(r: RapportMandat) {
   return `${r.enSuspens.length} activité${r.enSuspens.length > 1 ? "s" : ""} reste${r.enSuspens.length > 1 ? "nt" : ""} en suspens à la clôture du mandat, dont ${prioritaires} de priorité haute et ${enRetard} déjà en retard. Le détail, avec responsables et échéances, figure dans la checklist de passation ci-après.`;
 }
 
+type PropsSection = { rapport: RapportMandat; numero: number };
+
+function SectionIntro({ rapport, numero }: PropsSection) {
+  const { manager, periode } = rapport;
+  return (
+    <View style={styles.section} key="intro">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.intro}
+      </Text>
+      <Text style={styles.paragraphe}>
+        Du {formaterDate(periode.debut)} au {formaterDate(periode.fin)},{" "}
+        {manager.nom} a exercé la fonction de {manager.poste ?? "manager"}, à
+        la tête d&apos;une équipe de {rapport.equipe.length} collaborateur
+        {rapport.equipe.length > 1 ? "s" : ""}
+        {rapport.activites.length > 0
+          ? ` sur ${rapport.activites.length} activité${rapport.activites.length > 1 ? "s" : ""} (${rapport.activites.map((a) => a.nom).join(", ")})`
+          : ""}
+        .
+      </Text>
+      {rapport.bilan.contexte ? (
+        <Text style={styles.paragraphe}>{rapport.bilan.contexte}</Text>
+      ) : (
+        <Text style={styles.nonRenseigne}>
+          Le contexte détaillé n&apos;a pas été renseigné. Il se complète
+          depuis l&apos;écran de génération du rapport avant de le régénérer.
+        </Text>
+      )}
+    </View>
+  );
+}
+
+function SectionRealisations({ rapport, numero }: PropsSection) {
+  if (rapport.realisations.length === 0) return null;
+  return (
+    <View style={styles.section} key="realisations">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.realisations}
+      </Text>
+      <Text style={styles.mention}>
+        Meilleures tâches de la période — livrées à temps et notées 4/5 ou
+        plus par le manager.
+      </Text>
+      <View style={styles.tableau}>
+        <View style={styles.enTete}>
+          <Text style={[styles.celluleEnTete, { flex: 2.6 }]}>Tâche</Text>
+          <Text style={[styles.celluleEnTete, { flex: 1.6 }]}>Activité</Text>
+          <Text style={[styles.celluleEnTete, { flex: 1.6 }]}>
+            Réalisée par
+          </Text>
+          <Text style={[styles.celluleEnTeteDroite, { flex: 0.8 }]}>
+            Note
+          </Text>
+        </View>
+        {rapport.realisations.map((t, i) => (
+          <View
+            key={`${t.titre}-${i}`}
+            style={[styles.ligne, i % 2 === 1 ? styles.ligneAlternee : {}]}
+            wrap={false}
+          >
+            <Text style={[styles.cellule, { flex: 2.6 }]}>{t.titre}</Text>
+            <Text style={[styles.cellule, { flex: 1.6, color: ENCRE_MUETTE }]}>
+              {t.mission}
+            </Text>
+            <Text style={[styles.cellule, { flex: 1.6 }]}>{t.assignes}</Text>
+            <Text
+              style={[
+                styles.celluleDroite,
+                { flex: 0.8, fontFamily: "Helvetica-Bold" },
+              ]}
+            >
+              {t.noteQualite}/5
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function SectionSuspens({ rapport, numero }: PropsSection) {
+  return (
+    <View style={styles.section} key="suspens">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.suspens}
+      </Text>
+      <Text style={styles.paragraphe}>{recapSuspens(rapport)}</Text>
+    </View>
+  );
+}
+
+function SectionRH({ rapport, numero }: PropsSection) {
+  return (
+    <View style={styles.section} key="rh">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.rh}
+      </Text>
+      <Text style={styles.mention}>
+        Composition de l&apos;équipe rattachée au manager et rattachement
+        hiérarchique de chacun, tels qu&apos;enregistrés dans
+        l&apos;organigramme.
+      </Text>
+
+      {rapport.equipe.length === 0 ? (
+        <Text style={styles.nonRenseigne}>Aucun membre rattaché.</Text>
+      ) : (
+        <View style={styles.tableau}>
+          <View style={styles.enTete}>
+            <Text style={[styles.celluleEnTete, { flex: 2 }]}>Membre</Text>
+            <Text style={[styles.celluleEnTete, { flex: 2 }]}>
+              Poste / fonction
+            </Text>
+            <Text style={[styles.celluleEnTete, { flex: 1.3 }]}>Service</Text>
+            <Text style={[styles.celluleEnTete, { flex: 1.7 }]}>
+              Rattaché à
+            </Text>
+            <Text style={[styles.celluleEnTeteDroite, { flex: 0.8 }]}>
+              Tâches
+            </Text>
+          </View>
+          {rapport.equipe.map((m, i) => (
+            <View
+              key={m.nom}
+              style={[styles.ligne, i % 2 === 1 ? styles.ligneAlternee : {}]}
+              wrap={false}
+            >
+              <Text style={[styles.cellule, { flex: 2 }]}>{m.nom}</Text>
+              <Text style={[styles.cellule, { flex: 2 }]}>
+                {m.poste ?? "—"}
+              </Text>
+              <Text style={[styles.cellule, { flex: 1.3, color: ENCRE_MUETTE }]}>
+                {m.service ?? "—"}
+              </Text>
+              <Text style={[styles.cellule, { flex: 1.7, color: ENCRE_MUETTE }]}>
+                {m.superieur ?? "Non défini"}
+              </Text>
+              <Text style={[styles.celluleDroite, { flex: 0.8 }]}>
+                {m.nbTaches}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function SectionPerformance({ rapport, numero }: PropsSection) {
+  const { chiffres } = rapport;
+  return (
+    <View style={styles.section} key="performance">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.performance}
+      </Text>
+      <Text style={styles.mention}>
+        Section réservée à l&apos;encadrement. Chiffres calculés sur
+        l&apos;ensemble de la période du mandat.
+      </Text>
+      <Text style={styles.paragraphe}>{resumeExecutif(rapport)}</Text>
+
+      <View style={[styles.rangee, { marginTop: 10 }]}>
+        <Carte libelle="Tâches planifiées" valeur={String(chiffres.total)} />
+        <Carte libelle="Réalisées" valeur={String(chiffres.terminees)} />
+        <Carte libelle="Non abouties" valeur={String(chiffres.manquees)} />
+        <Carte libelle="Complétion" valeur={`${chiffres.tauxCompletion} %`} />
+      </View>
+      <View style={[styles.rangee, { marginTop: 10 }]}>
+        <Carte
+          libelle="Ponctualité moyenne"
+          valeur={`${chiffres.ponctualiteMoyenne} %`}
+        />
+        <Carte
+          libelle="Qualité moyenne"
+          valeur={
+            chiffres.qualiteMoyenne === null
+              ? "non évaluée"
+              : `${chiffres.qualiteMoyenne} / 5`
+          }
+        />
+        <Carte libelle="Encore en retard" valeur={String(chiffres.enRetard)} />
+        <Carte
+          libelle="Activités couvertes"
+          valeur={String(rapport.activites.length)}
+        />
+      </View>
+
+      {rapport.avancement.length > 1 && (
+        <View style={{ marginTop: 16 }}>
+          <Text style={styles.legendeGraphique}>
+            Avancement au fil du mandat — part des tâches échues effectivement
+            réalisées
+          </Text>
+          <CourbePdf
+            points={rapport.avancement.map((p) => ({
+              periode: p.periode,
+              valeur: p.completion,
+            }))}
+          />
+        </View>
+      )}
+
+      {rapport.parMembre.length === 0 ? (
+        <Text style={[styles.paragraphe, { marginTop: 12 }]}>
+          Aucun membre évalué sur la période.
+        </Text>
+      ) : (
+        <View style={[styles.tableau, { marginTop: 12 }]}>
+          <View style={styles.enTete}>
+            <Text style={[styles.celluleEnTete, { flex: 0.4 }]}>#</Text>
+            <Text style={[styles.celluleEnTete, { flex: 2.4 }]}>Membre</Text>
+            <Text style={[styles.celluleEnTeteDroite, { flex: 0.9 }]}>
+              Score
+            </Text>
+            <Text style={[styles.celluleEnTeteDroite, { flex: 1.1 }]}>
+              Complétion
+            </Text>
+            <Text style={[styles.celluleEnTeteDroite, { flex: 0.9 }]}>
+              Délais
+            </Text>
+            <Text style={[styles.celluleEnTeteDroite, { flex: 0.9 }]}>
+              Qualité
+            </Text>
+            <Text style={[styles.celluleEnTeteDroite, { flex: 0.9 }]}>
+              Tâches
+            </Text>
+          </View>
+          {rapport.parMembre.map((m, i) => (
+            <View
+              key={m.userId}
+              style={[styles.ligne, i % 2 === 1 ? styles.ligneAlternee : {}]}
+              wrap={false}
+            >
+              <Text style={[styles.cellule, { flex: 0.4, color: ENCRE_MUETTE }]}>
+                {i + 1}
+              </Text>
+              <Text style={[styles.cellule, { flex: 2.4 }]}>
+                {m.nom}
+                {m.poste ? ` — ${m.poste}` : ""}
+              </Text>
+              <Text
+                style={[
+                  styles.celluleDroite,
+                  { flex: 0.9, fontFamily: "Helvetica-Bold" },
+                ]}
+              >
+                {m.scoreGlobal}
+              </Text>
+              <Text style={[styles.celluleDroite, { flex: 1.1 }]}>
+                {m.tauxCompletion} %
+              </Text>
+              <Text style={[styles.celluleDroite, { flex: 0.9 }]}>
+                {m.ponctualite} %
+              </Text>
+              <Text style={[styles.celluleDroite, { flex: 0.9 }]}>
+                {m.qualiteNonEvaluee ? "—" : `${m.noteMoyenneSur5}/5`}
+              </Text>
+              <Text style={[styles.celluleDroite, { flex: 0.9 }]}>
+                {m.nbTachesTerminees}/{m.nbTachesExigibles}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function SectionRubriques({ rapport, numero }: PropsSection) {
+  if (rapport.rubriques.length === 0) return null;
+  return (
+    <View key="rubriques">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.rubriques}
+      </Text>
+      {rapport.rubriques.map((r, i) => (
+        <View key={i} style={styles.section} wrap={false}>
+          <Text style={styles.titreSousSection}>{r.titre}</Text>
+          {r.contenu ? (
+            <Text style={styles.paragraphe}>{r.contenu}</Text>
+          ) : (
+            <Text style={styles.nonRenseigne}>Non renseigné.</Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function SectionChecklist({ rapport, numero }: PropsSection) {
+  return (
+    <View style={styles.section} key="checklist">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.checklist}
+      </Text>
+      <Text style={styles.mention}>
+        {rapport.enSuspens.length} activité
+        {rapport.enSuspens.length > 1 ? "s" : ""} non aboutie
+        {rapport.enSuspens.length > 1 ? "s" : ""} au moment de la clôture. La
+        matrice RACI de passation en détaille les responsabilités.
+      </Text>
+
+      {rapport.enSuspens.length === 0 ? (
+        <Text style={styles.nonRenseigne}>Aucune activité en suspens.</Text>
+      ) : (
+        <View style={styles.tableau}>
+          <View style={styles.enTete}>
+            <Text style={[styles.celluleEnTete, { flex: 2.4 }]}>
+              Activité
+            </Text>
+            <Text style={[styles.celluleEnTete, { flex: 1.6 }]}>
+              Rattachée à
+            </Text>
+            <Text style={[styles.celluleEnTete, { flex: 1.6 }]}>
+              Responsable
+            </Text>
+            <Text style={[styles.celluleEnTete, { flex: 1.1 }]}>
+              Échéance
+            </Text>
+            <Text style={[styles.celluleEnTete, { flex: 1 }]}>Priorité</Text>
+            <Text style={[styles.celluleEnTeteDroite, { flex: 1 }]}>
+              Statut
+            </Text>
+          </View>
+          {rapport.enSuspens.map((a, i) => (
+            <View
+              key={`${a.titre}-${i}`}
+              style={[styles.ligne, i % 2 === 1 ? styles.ligneAlternee : {}]}
+              wrap={false}
+            >
+              <Text style={[styles.cellule, { flex: 2.4 }]}>{a.titre}</Text>
+              <Text style={[styles.cellule, { flex: 1.6, color: ENCRE_MUETTE }]}>
+                {a.activite}
+              </Text>
+              <Text style={[styles.cellule, { flex: 1.6 }]}>
+                {a.responsable}
+              </Text>
+              <Text
+                style={[
+                  styles.cellule,
+                  { flex: 1.1 },
+                  a.enRetard ? { color: ALERTE } : {},
+                ]}
+              >
+                {a.echeance}
+              </Text>
+              <Text style={[styles.cellule, { flex: 1 }]}>{a.priorite}</Text>
+              <Text
+                style={[
+                  styles.celluleDroite,
+                  { flex: 1 },
+                  a.enRetard ? { color: ALERTE } : {},
+                ]}
+              >
+                {a.statut}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function SectionProlongations({ rapport, numero }: PropsSection) {
+  if (rapport.prolongations.length === 0) return null;
+  return (
+    <View style={styles.section} key="prolongations">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.prolongations}
+      </Text>
+      <Text style={styles.mention}>
+        Chaque décalage d&apos;échéance et son motif, toutes activités
+        confondues sur la période du mandat.
+      </Text>
+
+      {rapport.prolongations.map((p, i) => (
+        <View key={i} style={styles.prolongation} wrap={false}>
+          <Text style={styles.gras}>
+            {p.activite} — {p.ancienne} → {p.nouvelle} (+{p.joursAjoutes}{" "}
+            jours)
+          </Text>
+          <Text style={styles.mention}>
+            Décidée le {p.date}
+            {p.auteur ? ` par ${p.auteur}` : ""}
+          </Text>
+          {p.motif && (
+            <Text style={{ fontSize: 9, marginTop: 2 }}>Motif : {p.motif}</Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function SectionInfosPratiques({ rapport, numero }: PropsSection) {
+  return (
+    <View style={styles.section} wrap={false} key="informations_pratiques">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.informations_pratiques}
+      </Text>
+      {rapport.bilan.informationsPratiques ? (
+        <Text style={styles.paragraphe}>
+          {rapport.bilan.informationsPratiques}
+        </Text>
+      ) : (
+        <Text style={styles.nonRenseigne}>
+          Non renseigné. Cette partie se complète depuis l&apos;écran de
+          génération du rapport, avant de le régénérer.
+        </Text>
+      )}
+    </View>
+  );
+}
+
+function SectionBilanQualitatif({ rapport, numero }: PropsSection) {
+  return (
+    <View key="bilan_qualitatif">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.bilan_qualitatif}
+      </Text>
+      <BlocBilan
+        numero={`${numero}.1`}
+        titre="Synthèse générale"
+        texte={rapport.bilan.qualitatif}
+      />
+      <BlocBilan
+        numero={`${numero}.2`}
+        titre="Points forts de l'équipe"
+        texte={rapport.bilan.pointsForts}
+      />
+      <BlocBilan
+        numero={`${numero}.3`}
+        titre="Défis rencontrés et points d'amélioration"
+        texte={rapport.bilan.defis}
+      />
+      <BlocBilan
+        numero={`${numero}.4`}
+        titre="Recommandations pour la suite"
+        texte={rapport.bilan.recommandations}
+      />
+    </View>
+  );
+}
+
+function SectionConclusion({ rapport, numero }: PropsSection) {
+  return (
+    <View style={styles.section} key="conclusion">
+      <Text style={styles.titreSection}>
+        {numero}. {LIBELLES_SECTION_MANDAT.conclusion}
+      </Text>
+      {rapport.bilan.conclusion ? (
+        <Text style={styles.paragraphe}>{rapport.bilan.conclusion}</Text>
+      ) : (
+        <Text style={styles.nonRenseigne}>
+          Non renseigné. Cette partie se complète depuis l&apos;écran de
+          génération du rapport, avant de le régénérer.
+        </Text>
+      )}
+    </View>
+  );
+}
+
+const RENDERERS: Record<CleSectionMandat, (props: PropsSection) => React.ReactNode> = {
+  intro: SectionIntro,
+  realisations: SectionRealisations,
+  suspens: SectionSuspens,
+  rh: SectionRH,
+  performance: SectionPerformance,
+  rubriques: SectionRubriques,
+  checklist: SectionChecklist,
+  prolongations: SectionProlongations,
+  informations_pratiques: SectionInfosPratiques,
+  bilan_qualitatif: SectionBilanQualitatif,
+  conclusion: SectionConclusion,
+};
+
 export function PdfMandat({ rapport }: { rapport: RapportMandat }) {
-  const { manager, periode, chiffres } = rapport;
+  const { manager, periode } = rapport;
 
-  const avecRubriques = rapport.rubriques.length > 0;
-  const avecProlongations = rapport.prolongations.length > 0;
+  // Seules les sections dont les données existent réellement comptent dans
+  // le plan — une section vide ne doit pas laisser de trou de numérotation.
+  const sections = rapport.sectionsIncluses.filter((cle) => {
+    if (cle === "rubriques") return rapport.rubriques.length > 0;
+    if (cle === "prolongations") return rapport.prolongations.length > 0;
+    if (cle === "realisations") return rapport.realisations.length > 0;
+    return true;
+  });
 
-  // La numérotation se construit dans l'ordre réel des sections : une section
-  // absente ne doit pas laisser de trou dans le sommaire.
-  const plan: { titre: string; page: number }[] = [
-    { titre: "Introduction et contexte de la mission", page: 2 },
-    { titre: "Récap des activités et priorités en suspens", page: 2 },
-    { titre: "Ressources humaines", page: 2 },
-    { titre: "Performance de l'équipe", page: 3 },
-    ...(avecRubriques
-      ? [{ titre: "Rubriques complémentaires", page: 4 }]
-      : []),
-    { titre: "Checklist de passation et priorités", page: 4 },
-    ...(avecProlongations
-      ? [{ titre: "Historique des prolongations", page: 4 }]
-      : []),
-    { titre: "Informations pratiques", page: 5 },
-    { titre: "Bilan qualitatif du manager", page: 5 },
-    { titre: "Conclusion et remerciements", page: 5 },
-    { titre: "Annexe — liste exhaustive des tâches", page: 6 },
+  const plan = [
+    ...sections.map((cle) => ({ cle, titre: LIBELLES_SECTION_MANDAT[cle] })),
+    { cle: "annexe" as const, titre: "Annexe — liste exhaustive des tâches" },
   ];
-
-  const num = (titre: string) => plan.findIndex((s) => s.titre === titre) + 1;
 
   const entete = `Rapport de fin de mission · ${manager.nom}`;
 
@@ -118,10 +583,9 @@ export function PdfMandat({ rapport }: { rapport: RapportMandat }) {
           <View style={styles.sommaire}>
             <Text style={styles.titreSommaire}>Sommaire</Text>
             {plan.map((s, i) => (
-              <View key={s.titre} style={styles.ligneSommaire}>
+              <View key={s.cle} style={styles.ligneSommaire}>
                 <Text style={styles.numeroSommaire}>{i + 1}.</Text>
                 <Text style={styles.libelleSommaire}>{s.titre}</Text>
-                <Text style={styles.pageSommaire}>{s.page}</Text>
               </View>
             ))}
           </View>
@@ -135,428 +599,19 @@ export function PdfMandat({ rapport }: { rapport: RapportMandat }) {
         <PiedDePage entete={entete} genereLe={rapport.genereLe} />
       </Page>
 
-      {/* ——— Sections 1 à 3 ——— */}
+      {/* ——— Sections narratives, dans l'ordre choisi par le manager ——— */}
+      {/* Une seule Page qui se pagine automatiquement : l'ordre étant
+          configurable, découper le contenu à la main en pages fixes n'aurait
+          plus de sens. */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.entete} fixed>
           {entete}
         </Text>
 
-        <View>
-          <Text style={styles.titreSection}>
-            {num("Introduction et contexte de la mission")}. Introduction et
-            contexte de la mission
-          </Text>
-          <Text style={styles.paragraphe}>
-            Du {formaterDate(periode.debut)} au {formaterDate(periode.fin)},{" "}
-            {manager.nom} a exercé la fonction de{" "}
-            {manager.poste ?? "manager"}, à la tête d&apos;une équipe de{" "}
-            {rapport.equipe.length} collaborateur
-            {rapport.equipe.length > 1 ? "s" : ""}
-            {rapport.activites.length > 0
-              ? ` sur ${rapport.activites.length} activité${rapport.activites.length > 1 ? "s" : ""} (${rapport.activites.map((a) => a.nom).join(", ")})`
-              : ""}
-            .
-          </Text>
-          {rapport.bilan.contexte ? (
-            <Text style={styles.paragraphe}>{rapport.bilan.contexte}</Text>
-          ) : (
-            <Text style={styles.nonRenseigne}>
-              Le contexte détaillé n&apos;a pas été renseigné. Il se complète
-              depuis l&apos;écran de génération du rapport avant de le
-              régénérer.
-            </Text>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.titreSection}>
-            {num("Récap des activités et priorités en suspens")}. Récap des
-            activités et priorités en suspens
-          </Text>
-          <Text style={styles.paragraphe}>{recapSuspens(rapport)}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.titreSection}>
-            {num("Ressources humaines")}. Ressources humaines
-          </Text>
-          <Text style={styles.mention}>
-            Composition de l&apos;équipe rattachée au manager et rattachement
-            hiérarchique de chacun, tels qu&apos;enregistrés dans
-            l&apos;organigramme.
-          </Text>
-
-          {rapport.equipe.length === 0 ? (
-            <Text style={styles.nonRenseigne}>Aucun membre rattaché.</Text>
-          ) : (
-            <View style={styles.tableau}>
-              <View style={styles.enTete}>
-                <Text style={[styles.celluleEnTete, { flex: 2 }]}>Membre</Text>
-                <Text style={[styles.celluleEnTete, { flex: 2 }]}>
-                  Poste / fonction
-                </Text>
-                <Text style={[styles.celluleEnTete, { flex: 1.3 }]}>
-                  Service
-                </Text>
-                <Text style={[styles.celluleEnTete, { flex: 1.7 }]}>
-                  Rattaché à
-                </Text>
-                <Text style={[styles.celluleEnTeteDroite, { flex: 0.8 }]}>
-                  Tâches
-                </Text>
-              </View>
-              {rapport.equipe.map((m, i) => (
-                <View
-                  key={m.nom}
-                  style={[styles.ligne, i % 2 === 1 ? styles.ligneAlternee : {}]}
-                  wrap={false}
-                >
-                  <Text style={[styles.cellule, { flex: 2 }]}>{m.nom}</Text>
-                  <Text style={[styles.cellule, { flex: 2 }]}>
-                    {m.poste ?? "—"}
-                  </Text>
-                  <Text
-                    style={[styles.cellule, { flex: 1.3, color: ENCRE_MUETTE }]}
-                  >
-                    {m.service ?? "—"}
-                  </Text>
-                  <Text
-                    style={[styles.cellule, { flex: 1.7, color: ENCRE_MUETTE }]}
-                  >
-                    {m.superieur ?? "Non défini"}
-                  </Text>
-                  <Text style={[styles.celluleDroite, { flex: 0.8 }]}>
-                    {m.nbTaches}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <PiedDePage entete={entete} genereLe={rapport.genereLe} />
-      </Page>
-
-      {/* ——— Section 4 : Performance de l'équipe ——— */}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.entete} fixed>
-          {entete}
-        </Text>
-
-        <View>
-          <Text style={styles.titreSection}>
-            {num("Performance de l'équipe")}. Performance de l&apos;équipe
-          </Text>
-          <Text style={styles.mention}>
-            Section réservée à l&apos;encadrement. Chiffres calculés sur
-            l&apos;ensemble de la période du mandat.
-          </Text>
-          <Text style={styles.paragraphe}>{resumeExecutif(rapport)}</Text>
-
-          <View style={[styles.rangee, { marginTop: 10 }]}>
-            <Carte libelle="Tâches planifiées" valeur={String(chiffres.total)} />
-            <Carte libelle="Réalisées" valeur={String(chiffres.terminees)} />
-            <Carte libelle="Non abouties" valeur={String(chiffres.manquees)} />
-            <Carte libelle="Complétion" valeur={`${chiffres.tauxCompletion} %`} />
-          </View>
-          <View style={[styles.rangee, { marginTop: 10 }]}>
-            <Carte
-              libelle="Ponctualité moyenne"
-              valeur={`${chiffres.ponctualiteMoyenne} %`}
-            />
-            <Carte
-              libelle="Qualité moyenne"
-              valeur={
-                chiffres.qualiteMoyenne === null
-                  ? "non évaluée"
-                  : `${chiffres.qualiteMoyenne} / 5`
-              }
-            />
-            <Carte libelle="Encore en retard" valeur={String(chiffres.enRetard)} />
-            <Carte
-              libelle="Activités couvertes"
-              valeur={String(rapport.activites.length)}
-            />
-          </View>
-
-          {rapport.avancement.length > 1 && (
-            <View style={{ marginTop: 16 }}>
-              <Text style={styles.legendeGraphique}>
-                Avancement au fil du mandat — part des tâches échues
-                effectivement réalisées
-              </Text>
-              <CourbePdf
-                points={rapport.avancement.map((p) => ({
-                  periode: p.periode,
-                  valeur: p.completion,
-                }))}
-              />
-            </View>
-          )}
-
-          {rapport.parMembre.length === 0 ? (
-            <Text style={[styles.paragraphe, { marginTop: 12 }]}>
-              Aucun membre évalué sur la période.
-            </Text>
-          ) : (
-            <View style={[styles.tableau, { marginTop: 12 }]}>
-              <View style={styles.enTete}>
-                <Text style={[styles.celluleEnTete, { flex: 0.4 }]}>#</Text>
-                <Text style={[styles.celluleEnTete, { flex: 2.4 }]}>Membre</Text>
-                <Text style={[styles.celluleEnTeteDroite, { flex: 0.9 }]}>
-                  Score
-                </Text>
-                <Text style={[styles.celluleEnTeteDroite, { flex: 1.1 }]}>
-                  Complétion
-                </Text>
-                <Text style={[styles.celluleEnTeteDroite, { flex: 0.9 }]}>
-                  Délais
-                </Text>
-                <Text style={[styles.celluleEnTeteDroite, { flex: 0.9 }]}>
-                  Qualité
-                </Text>
-                <Text style={[styles.celluleEnTeteDroite, { flex: 0.9 }]}>
-                  Tâches
-                </Text>
-              </View>
-              {rapport.parMembre.map((m, i) => (
-                <View
-                  key={m.userId}
-                  style={[styles.ligne, i % 2 === 1 ? styles.ligneAlternee : {}]}
-                  wrap={false}
-                >
-                  <Text style={[styles.cellule, { flex: 0.4, color: ENCRE_MUETTE }]}>
-                    {i + 1}
-                  </Text>
-                  <Text style={[styles.cellule, { flex: 2.4 }]}>
-                    {m.nom}
-                    {m.poste ? ` — ${m.poste}` : ""}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.celluleDroite,
-                      { flex: 0.9, fontFamily: "Helvetica-Bold" },
-                    ]}
-                  >
-                    {m.scoreGlobal}
-                  </Text>
-                  <Text style={[styles.celluleDroite, { flex: 1.1 }]}>
-                    {m.tauxCompletion} %
-                  </Text>
-                  <Text style={[styles.celluleDroite, { flex: 0.9 }]}>
-                    {m.ponctualite} %
-                  </Text>
-                  <Text style={[styles.celluleDroite, { flex: 0.9 }]}>
-                    {m.qualiteNonEvaluee ? "—" : `${m.noteMoyenneSur5}/5`}
-                  </Text>
-                  <Text style={[styles.celluleDroite, { flex: 0.9 }]}>
-                    {m.nbTachesTerminees}/{m.nbTachesExigibles}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <PiedDePage entete={entete} genereLe={rapport.genereLe} />
-      </Page>
-
-      {/* ——— Rubriques complémentaires, checklist, prolongations ——— */}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.entete} fixed>
-          {entete}
-        </Text>
-
-        {avecRubriques && (
-          <View>
-            <Text style={styles.titreSection}>
-              {num("Rubriques complémentaires")}. Rubriques complémentaires
-            </Text>
-            {rapport.rubriques.map((r, i) => (
-              <View key={i} style={styles.section} wrap={false}>
-                <Text style={styles.titreSousSection}>{r.titre}</Text>
-                {r.contenu ? (
-                  <Text style={styles.paragraphe}>{r.contenu}</Text>
-                ) : (
-                  <Text style={styles.nonRenseigne}>Non renseigné.</Text>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-
-        <View style={styles.section}>
-          <Text style={styles.titreSection}>
-            {num("Checklist de passation et priorités")}. Checklist de
-            passation et priorités
-          </Text>
-          <Text style={styles.mention}>
-            {rapport.enSuspens.length} activité
-            {rapport.enSuspens.length > 1 ? "s" : ""} non aboutie
-            {rapport.enSuspens.length > 1 ? "s" : ""} au moment de la clôture.
-            La matrice RACI de passation en détaille les responsabilités.
-          </Text>
-
-          {rapport.enSuspens.length === 0 ? (
-            <Text style={styles.nonRenseigne}>
-              Aucune activité en suspens.
-            </Text>
-          ) : (
-            <View style={styles.tableau}>
-              <View style={styles.enTete}>
-                <Text style={[styles.celluleEnTete, { flex: 2.4 }]}>
-                  Activité
-                </Text>
-                <Text style={[styles.celluleEnTete, { flex: 1.6 }]}>
-                  Rattachée à
-                </Text>
-                <Text style={[styles.celluleEnTete, { flex: 1.6 }]}>
-                  Responsable
-                </Text>
-                <Text style={[styles.celluleEnTete, { flex: 1.1 }]}>
-                  Échéance
-                </Text>
-                <Text style={[styles.celluleEnTete, { flex: 1 }]}>
-                  Priorité
-                </Text>
-                <Text style={[styles.celluleEnTeteDroite, { flex: 1 }]}>
-                  Statut
-                </Text>
-              </View>
-              {rapport.enSuspens.map((a, i) => (
-                <View
-                  key={`${a.titre}-${i}`}
-                  style={[styles.ligne, i % 2 === 1 ? styles.ligneAlternee : {}]}
-                  wrap={false}
-                >
-                  <Text style={[styles.cellule, { flex: 2.4 }]}>{a.titre}</Text>
-                  <Text
-                    style={[styles.cellule, { flex: 1.6, color: ENCRE_MUETTE }]}
-                  >
-                    {a.activite}
-                  </Text>
-                  <Text style={[styles.cellule, { flex: 1.6 }]}>
-                    {a.responsable}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.cellule,
-                      { flex: 1.1 },
-                      a.enRetard ? { color: ALERTE } : {},
-                    ]}
-                  >
-                    {a.echeance}
-                  </Text>
-                  <Text style={[styles.cellule, { flex: 1 }]}>{a.priorite}</Text>
-                  <Text
-                    style={[
-                      styles.celluleDroite,
-                      { flex: 1 },
-                      a.enRetard ? { color: ALERTE } : {},
-                    ]}
-                  >
-                    {a.statut}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {avecProlongations && (
-          <View style={styles.section}>
-            <Text style={styles.titreSection}>
-              {num("Historique des prolongations")}. Historique des
-              prolongations
-            </Text>
-            <Text style={styles.mention}>
-              Chaque décalage d&apos;échéance et son motif, toutes activités
-              confondues sur la période du mandat.
-            </Text>
-
-            {rapport.prolongations.map((p, i) => (
-              <View key={i} style={styles.prolongation} wrap={false}>
-                <Text style={styles.gras}>
-                  {p.activite} — {p.ancienne} → {p.nouvelle} (+{p.joursAjoutes}{" "}
-                  jours)
-                </Text>
-                <Text style={styles.mention}>
-                  Décidée le {p.date}
-                  {p.auteur ? ` par ${p.auteur}` : ""}
-                </Text>
-                {p.motif && (
-                  <Text style={{ fontSize: 9, marginTop: 2 }}>
-                    Motif : {p.motif}
-                  </Text>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-
-        <PiedDePage entete={entete} genereLe={rapport.genereLe} />
-      </Page>
-
-      {/* ——— Informations pratiques, bilan qualitatif, conclusion ——— */}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.entete} fixed>
-          {entete}
-        </Text>
-
-        <View style={styles.section} wrap={false}>
-          <Text style={styles.titreSection}>
-            {num("Informations pratiques")}. Informations pratiques
-          </Text>
-          {rapport.bilan.informationsPratiques ? (
-            <Text style={styles.paragraphe}>
-              {rapport.bilan.informationsPratiques}
-            </Text>
-          ) : (
-            <Text style={styles.nonRenseigne}>
-              Non renseigné. Cette partie se complète depuis l&apos;écran de
-              génération du rapport, avant de le régénérer.
-            </Text>
-          )}
-        </View>
-
-        <Text style={styles.titreSection}>
-          {num("Bilan qualitatif du manager")}. Bilan qualitatif du manager
-        </Text>
-
-        <BlocBilan
-          numero={`${num("Bilan qualitatif du manager")}.1`}
-          titre="Synthèse générale"
-          texte={rapport.bilan.qualitatif}
-        />
-        <BlocBilan
-          numero={`${num("Bilan qualitatif du manager")}.2`}
-          titre="Points forts de l'équipe"
-          texte={rapport.bilan.pointsForts}
-        />
-        <BlocBilan
-          numero={`${num("Bilan qualitatif du manager")}.3`}
-          titre="Défis rencontrés et points d'amélioration"
-          texte={rapport.bilan.defis}
-        />
-        <BlocBilan
-          numero={`${num("Bilan qualitatif du manager")}.4`}
-          titre="Recommandations pour la suite"
-          texte={rapport.bilan.recommandations}
-        />
-
-        <View style={styles.section}>
-          <Text style={styles.titreSection}>
-            {num("Conclusion et remerciements")}. Conclusion et remerciements
-          </Text>
-          {rapport.bilan.conclusion ? (
-            <Text style={styles.paragraphe}>{rapport.bilan.conclusion}</Text>
-          ) : (
-            <Text style={styles.nonRenseigne}>
-              Non renseigné. Cette partie se complète depuis l&apos;écran de
-              génération du rapport, avant de le régénérer.
-            </Text>
-          )}
-        </View>
+        {sections.map((cle, i) => {
+          const Rendu = RENDERERS[cle];
+          return <Rendu key={cle} rapport={rapport} numero={i + 1} />;
+        })}
 
         <PiedDePage entete={entete} genereLe={rapport.genereLe} />
       </Page>
@@ -568,8 +623,7 @@ export function PdfMandat({ rapport }: { rapport: RapportMandat }) {
         </Text>
 
         <Text style={styles.titreSection}>
-          {num("Annexe — liste exhaustive des tâches")}. Annexe — liste
-          exhaustive des tâches
+          {plan.length}. Annexe — liste exhaustive des tâches
         </Text>
         <Text style={styles.mention}>
           {rapport.taches.length} tâche

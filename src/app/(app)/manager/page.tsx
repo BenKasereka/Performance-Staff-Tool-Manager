@@ -12,6 +12,7 @@ import { JOURS_ALERTE_FIN_MISSION } from "@/lib/missions";
 
 import { BadgeStatutTache } from "@/components/badges";
 import { BoutonsRapport } from "@/components/boutons-rapport";
+import { StatTile, type ToneStatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -55,11 +56,15 @@ export default async function PageManager() {
       ? Math.round((termineesSemaine / tachesSemaine.length) * 100)
       : 0;
 
-  const chiffres = [
-    { libelle: "Membres actifs", valeur: nbMembres },
-    { libelle: "Tâches cette semaine", valeur: tachesSemaine.length },
-    { libelle: "Terminées", valeur: termineesSemaine },
-    { libelle: "En retard", valeur: enRetard.length, alerte: enRetard.length > 0 },
+  const chiffres: { libelle: string; valeur: number; tone: ToneStatTile }[] = [
+    { libelle: "Membres actifs", valeur: nbMembres, tone: "info" },
+    { libelle: "Tâches cette semaine", valeur: tachesSemaine.length, tone: "info" },
+    { libelle: "Terminées", valeur: termineesSemaine, tone: "success" },
+    {
+      libelle: "En retard",
+      valeur: enRetard.length,
+      tone: enRetard.length > 0 ? "destructive" : "neutral",
+    },
   ];
 
   return (
@@ -148,16 +153,7 @@ export default async function PageManager() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {chiffres.map((c) => (
-          <Card key={c.libelle}>
-            <CardHeader className="pb-2">
-              <CardDescription>{c.libelle}</CardDescription>
-              <CardTitle
-                className={`text-3xl tabular-nums ${c.alerte ? "text-destructive" : ""}`}
-              >
-                {c.valeur}
-              </CardTitle>
-            </CardHeader>
-          </Card>
+          <StatTile key={c.libelle} libelle={c.libelle} valeur={c.valeur} tone={c.tone} />
         ))}
       </div>
 

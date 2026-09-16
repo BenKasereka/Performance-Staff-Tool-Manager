@@ -240,6 +240,17 @@ export async function excelMandat(rapport: RapportMandat): Promise<Buffer> {
   const bilan = synthese.addRow([rapport.bilan.qualitatif ?? "—"]);
   bilan.alignment = { wrapText: true, vertical: "top" };
 
+  if (rapport.realisations.length > 0) {
+    const realisations = classeur.addWorksheet("Grandes réalisations");
+    ajusterColonnes(realisations, [40, 22, 22, 10]);
+    styliserEntete(
+      realisations.addRow(["Tâche", "Activité", "Réalisée par", "Note"]),
+    );
+    for (const t of rapport.realisations) {
+      realisations.addRow([t.titre, t.mission, t.assignes, t.noteQualite]);
+    }
+  }
+
   if (rapport.rubriques.length > 0) {
     const rubriques = classeur.addWorksheet("Rubriques complémentaires");
     ajusterColonnes(rubriques, [30, 70]);

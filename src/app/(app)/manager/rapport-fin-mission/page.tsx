@@ -3,10 +3,12 @@ import { subYears } from "date-fns";
 import { exigerManager } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { construireRapportMandat } from "@/lib/rapports/donnees";
+import { validerOrdreSections } from "@/lib/rapports/sections-mandat";
 import { formaterDate, versValeurInput } from "@/lib/dates";
 import { BoutonsRapport } from "@/components/boutons-rapport";
 import { SelecteurPeriodeMandat } from "@/components/selecteur-periode-mandat";
 import { FormulaireRapportMandat } from "@/components/formulaire-rapport-mandat";
+import { StatTile } from "@/components/stat-tile";
 import {
   Card,
   CardContent,
@@ -78,40 +80,22 @@ export default async function PageRapportFinMission({
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Équipe couverte</CardDescription>
-                <CardTitle className="text-3xl tabular-nums">
-                  {rapport.equipe.length}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Activités couvertes</CardDescription>
-                <CardTitle className="text-3xl tabular-nums">
-                  {rapport.activites.length}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Tâches sur la période</CardDescription>
-                <CardTitle className="text-3xl tabular-nums">
-                  {rapport.chiffres.total}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Encore en suspens</CardDescription>
-                <CardTitle
-                  className={`text-3xl tabular-nums ${rapport.enSuspens.length > 0 ? "text-warning" : ""}`}
-                >
-                  {rapport.enSuspens.length}
-                </CardTitle>
-              </CardHeader>
-            </Card>
+            <StatTile libelle="Équipe couverte" valeur={rapport.equipe.length} tone="info" />
+            <StatTile
+              libelle="Activités couvertes"
+              valeur={rapport.activites.length}
+              tone="info"
+            />
+            <StatTile
+              libelle="Tâches sur la période"
+              valeur={rapport.chiffres.total}
+              tone="neutral"
+            />
+            <StatTile
+              libelle="Encore en suspens"
+              valeur={rapport.enSuspens.length}
+              tone={rapport.enSuspens.length > 0 ? "warning" : "neutral"}
+            />
           </div>
 
           {rapport.equipe.length === 0 && (
@@ -148,6 +132,9 @@ export default async function PageRapportFinMission({
                     titre: r.titre,
                     contenu: r.contenu ?? "",
                   })),
+                  sectionsIncluses: validerOrdreSections(
+                    existant?.sectionsIncluses,
+                  ),
                 }}
               />
             </CardContent>

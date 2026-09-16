@@ -20,6 +20,7 @@ import { DialogueTache } from "@/components/dialogue-tache";
 import { ListeTaches } from "@/components/liste-taches";
 import { ActionsMission } from "./actions-mission";
 import { BilanQualitatif } from "./bilan-qualitatif";
+import { StatTile, type ToneStatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -69,11 +70,11 @@ export default async function PageMission({
     taches.length > 0 ? Math.round((terminees / taches.length) * 100) : 0;
   const restants = joursRestants(mission.dateFinActuelle);
 
-  const chiffres = [
-    { libelle: "Tâches", valeur: taches.length },
-    { libelle: "Terminées", valeur: terminees },
-    { libelle: "En retard", valeur: enRetard },
-    { libelle: "Complétion", valeur: `${tauxCompletion} %` },
+  const chiffres: { libelle: string; valeur: string | number; tone: ToneStatTile }[] = [
+    { libelle: "Tâches", valeur: taches.length, tone: "neutral" },
+    { libelle: "Terminées", valeur: terminees, tone: "success" },
+    { libelle: "En retard", valeur: enRetard, tone: enRetard > 0 ? "destructive" : "neutral" },
+    { libelle: "Complétion", valeur: `${tauxCompletion} %`, tone: "info" },
   ];
 
   return (
@@ -178,12 +179,7 @@ export default async function PageMission({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {chiffres.map((c) => (
-          <Card key={c.libelle}>
-            <CardHeader className="pb-2">
-              <CardDescription>{c.libelle}</CardDescription>
-              <CardTitle className="text-3xl tabular-nums">{c.valeur}</CardTitle>
-            </CardHeader>
-          </Card>
+          <StatTile key={c.libelle} libelle={c.libelle} valeur={c.valeur} tone={c.tone} />
         ))}
       </div>
 

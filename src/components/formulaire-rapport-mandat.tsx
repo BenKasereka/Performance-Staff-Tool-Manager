@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 
 import { sauvegarderRapportMandat } from "@/lib/actions/rapport-mandat";
 import { useFormulaireAction } from "@/lib/use-formulaire-action";
+import {
+  LIBELLES_SECTION_MANDAT,
+  ORDRE_SECTIONS_PAR_DEFAUT,
+  type CleSectionMandat,
+} from "@/lib/rapports/sections-mandat";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,7 +27,25 @@ export type BilanMandatEditable = {
   bilanConclusion: string;
   informationsPratiques: string;
   rubriques: { titre: string; contenu: string }[];
+  sectionsIncluses: CleSectionMandat[];
 };
+
+type SectionConfig = { cle: CleSectionMandat; incluse: boolean };
+
+/** Place les sections choisies en tête dans l'ordre voulu, puis les sections
+ * exclues à la suite (dans l'ordre par défaut) pour qu'elles restent
+ * réactivables sans tout reconfigurer. */
+function ordreInitial(sectionsIncluses: CleSectionMandat[]): SectionConfig[] {
+  const incluses =
+    sectionsIncluses.length > 0 ? sectionsIncluses : ORDRE_SECTIONS_PAR_DEFAUT;
+  const restantes = ORDRE_SECTIONS_PAR_DEFAUT.filter(
+    (cle) => !incluses.includes(cle),
+  );
+  return [...incluses, ...restantes].map((cle) => ({
+    cle,
+    incluse: incluses.includes(cle),
+  }));
+}
 
 export function FormulaireRapportMandat({
   valeurs,
@@ -29,6 +53,9 @@ export function FormulaireRapportMandat({
   valeurs: BilanMandatEditable;
 }) {
   const [rubriques, setRubriques] = useState(valeurs.rubriques);
+  const [sections, setSections] = useState<SectionConfig[]>(() =>
+    ordreInitial(valeurs.sectionsIncluses),
+  );
   const { erreur, enAttente, soumettre } = useFormulaireAction(
     sauvegarderRapportMandat,
   );
@@ -47,10 +74,32 @@ export function FormulaireRapportMandat({
     );
   }
 
+  function basculerSection(index: number, incluse: boolean) {
+    setSections((s) => s.map((sec, i) => (i === index ? { ...sec, incluse } : sec)));
+  }
+
+  function deplacerSection(index: number, direction: -1 | 1) {
+    setSections((s) => {
+      const cible = index + direction;
+      if (cible < 0 || cible >= s.length) return s;
+      const copie = [...s];
+      [copie[index], copie[cible]] = [copie[cible], copie[index]];
+      return copie;
+    });
+  }
+
+  function reinitialiserSections() {
+    setSections(ORDRE_SECTIONS_PAR_DEFAUT.map((cle) => ({ cle, incluse: true })));
+  }
+
   function envoyer(donnees: FormData) {
     donnees.set(
       "rubriques",
       JSON.stringify(rubriques.filter((r) => r.titre.trim())),
+    );
+    donnees.set(
+      "sectionsIncluses",
+      JSON.stringify(sections.filter((s) => s.incluse).map((s) => s.cle)),
     );
     soumettre(donnees);
   }
@@ -59,6 +108,63 @@ export function FormulaireRapportMandat({
     <form action={envoyer} className="space-y-6">
       <input type="hidden" name="periodeDebut" value={valeurs.periodeDebut} />
       <input type="hidden" name="periodeFin" value={valeurs.periodeFin} />
+
+      <div className="rounded-lg border p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Structure du rapport</h3>
+          <Button type="button" variant="outline" size="sm" onClick={reinitialiserSections}>
+            Ordre par défaut
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Choisissez les sections à inclure et leur ordre d&apos;apparition
+          dans le document généré. La page de garde et l&apos;annexe des
+          tâches restent toujours présentes.
+        </p>
+
+        <div className="space-y-1.5">
+          {sections.map((s, i) => (
+            <div
+              key={s.cle}
+              className="flex items-center gap-3 rounded-md border p-2.5"
+            >
+              <Checkbox
+                checked={s.incluse}
+                onCheckedChange={(v) => basculerSection(i, v === true)}
+                aria-label={`Inclure la section ${LIBELLES_SECTION_MANDAT[s.cle]}`}
+              />
+              <span
+                className={
+                  "flex-1 text-sm " +
+                  (s.incluse ? "" : "text-muted-foreground line-through")
+                }
+              >
+                {LIBELLES_SECTION_MANDAT[s.cle]}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Monter cette section"
+                disabled={i === 0}
+                onClick={() => deplacerSection(i, -1)}
+              >
+                <ArrowUp />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Descendre cette section"
+                disabled={i === sections.length - 1}
+                onClick={() => deplacerSection(i, 1)}
+              >
+                <ArrowDown />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="bilanContexte">Contexte de la mission</Label>
