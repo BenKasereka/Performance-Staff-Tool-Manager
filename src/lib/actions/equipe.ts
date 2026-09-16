@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { exigerManager } from "@/lib/auth-guards";
+import { envoyerEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
 export type Resultat = { erreur?: string; succes?: string } | undefined;
@@ -53,12 +54,36 @@ export async function creerMembre(
       superieurId: parsed.data.superieurId,
       role: parsed.data.role,
       motDePasse: await bcrypt.hash(parsed.data.motDePasse, 12),
+      // Mot de passe choisi par le manager, pas par la personne elle-même :
+      // à changer dès la première connexion pour rester confidentiel.
+      doitChangerMotDePasse: true,
     },
+  });
+
+  // Le mot de passe en clair n'existe que dans cette requête (jamais persisté
+  // ailleurs que le hash ci-dessus) : c'est le seul moment où il peut être
+  // transmis à la personne concernée.
+  const invitation = await envoyerEmail({
+    destinataire: email,
+    sujet: "Votre accès à l'outil de suivi de performance d'équipe",
+    titre: "Bienvenue — votre accès a été créé",
+    corps: [
+      `Bonjour ${parsed.data.nom},`,
+      "Un accès à l'outil de suivi de performance d'équipe vient d'être créé pour vous par votre manager. Voici vos identifiants de connexion :",
+      `Identifiant (email) : ${email}`,
+      `Mot de passe temporaire : ${parsed.data.motDePasse}`,
+      "Ce mot de passe est temporaire : vous devrez en choisir un nouveau, connu de vous seul, dès votre première connexion.",
+    ],
+    lien: { url: `${process.env.AUTH_URL}/connexion`, libelle: "Se connecter" },
   });
 
   revalidatePath("/manager/equipe");
   revalidatePath("/manager/organigramme");
-  return { succes: `${parsed.data.nom} a été ajouté à l'équipe.` };
+  return {
+    succes: invitation.envoye
+      ? `${parsed.data.nom} a été ajouté à l'équipe et a reçu un email d'invitation.`
+      : `${parsed.data.nom} a été ajouté à l'équipe. Email d'invitation non envoyé (${invitation.raison}) : communiquez-lui son mot de passe temporaire vous-même.`,
+  };
 }
 
 export async function basculerActivation(userId: string): Promise<Resultat> {
@@ -160,7 +185,10 @@ export async function reinitialiserMotDePasse(
 
   await prisma.user.update({
     where: { id: userId },
-    data: { motDePasse: await bcrypt.hash(motDePasse, 12) },
+    data: {
+      motDePasse: await bcrypt.hash(motDePasse, 12),
+      doitChangerMotDePasse: true,
+    },
   });
 
   revalidatePath("/manager/equipe");

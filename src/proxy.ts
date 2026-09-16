@@ -5,7 +5,12 @@ import { authConfig } from "@/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-const ROUTES_PUBLIQUES = ["/connexion", "/inscription"];
+const ROUTES_PUBLIQUES = [
+  "/connexion",
+  "/inscription",
+  "/mot-de-passe-oublie",
+  "/reinitialiser-mot-de-passe",
+];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;

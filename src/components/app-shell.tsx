@@ -105,6 +105,12 @@ export async function AppShell({ utilisateur, children }: Props) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/changer-mot-de-passe">
+                    Changer le mot de passe
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <form
                   action={async () => {
                     "use server";

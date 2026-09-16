@@ -9,6 +9,7 @@ export default async function PageConnexion({
 }: PageProps<"/connexion">) {
   const params = await searchParams;
   const compteCree = params["compte-cree"] === "1";
+  const motDePasseReinitialise = params["mot-de-passe-reinitialise"] === "1";
   const aucunUtilisateur = (await prisma.user.count()) === 0;
 
   return (
@@ -32,7 +33,22 @@ export default async function PageConnexion({
           </p>
         )}
 
+        {motDePasseReinitialise && (
+          <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">
+            Mot de passe modifié. Vous pouvez maintenant vous connecter.
+          </p>
+        )}
+
         <FormulaireConnexion />
+
+        <p className="text-center text-sm">
+          <Link
+            href="/mot-de-passe-oublie"
+            className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          >
+            Mot de passe oublié ?
+          </Link>
+        </p>
 
         {process.env.DEMO_PUBLIQUE === "1" && (
           <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm">

@@ -88,6 +88,15 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Vrai tant que le mot de passe a été choisi par le manager (création de
+  // compte ou réinitialisation admin) et jamais changé par la personne elle-même.
+  doitChangerMotDePasse Boolean @default(false)
+
+  // Mot de passe oublié : jeton à usage unique envoyé par email. Le hash
+  // (sha256) est stocké, jamais le jeton en clair — cf. lib/actions/mot-de-passe.ts.
+  resetTokenHash   String?   @unique
+  resetTokenExpire DateTime?
+
   // Organigramme : un seul supérieur hiérarchique (N+1) par personne.
   superieurId String?
   superieur   User?   @relation("Hierarchie", fields: [superieurId], references: [id], onDelete: SetNull)
