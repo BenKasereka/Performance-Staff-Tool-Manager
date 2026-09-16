@@ -1,4 +1,5 @@
 import type { MissionStatut, MissionType } from "@prisma/client";
+import type { BadgeVariant } from "@/components/ui/badge";
 
 export const LIBELLES_STATUT_MISSION: Record<MissionStatut, string> = {
   EN_PREPARATION: "En préparation",
@@ -8,16 +9,16 @@ export const LIBELLES_STATUT_MISSION: Record<MissionStatut, string> = {
   ARCHIVEE: "Archivée",
 };
 
-export const CLASSES_STATUT_MISSION: Record<MissionStatut, string> = {
-  EN_PREPARATION: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  ACTIVE: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-  EN_ATTENTE_DECISION: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
-  CLOTUREE: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-  ARCHIVEE: "bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400",
+export const VARIANT_STATUT_MISSION: Record<MissionStatut, BadgeVariant> = {
+  EN_PREPARATION: "neutral",
+  ACTIVE: "success",
+  EN_ATTENTE_DECISION: "destructive",
+  CLOTUREE: "info",
+  ARCHIVEE: "neutral",
 };
 
 export const LIBELLES_TYPE_MISSION: Record<MissionType, string> = {
-  PROJET: "Mission-projet",
+  PROJET: "Activité-projet",
   CYCLE_RECURRENT: "Cycle récurrent",
 };
 

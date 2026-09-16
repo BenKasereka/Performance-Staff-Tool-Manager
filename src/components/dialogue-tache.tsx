@@ -149,7 +149,7 @@ export function DialogueTache({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="missionId">Mission</Label>
+              <Label htmlFor="missionId">Activité</Label>
               <select
                 id="missionId"
                 name="missionId"

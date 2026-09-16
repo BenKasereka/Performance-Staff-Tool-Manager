@@ -190,7 +190,7 @@ export async function construireRaci(
     : null;
 
   return {
-    perimetre: mission ? `Mission « ${mission.nom} »` : "Toutes activités en cours",
+    perimetre: mission ? `Activité « ${mission.nom} »` : "Toutes activités en cours",
     mission: mission ? { nom: mission.nom, dateFin: mission.dateFinActuelle } : null,
     lignes,
     repartition: [...parResponsable.entries()]

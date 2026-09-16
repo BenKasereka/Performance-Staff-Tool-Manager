@@ -27,10 +27,10 @@ export async function GET(
 
   const rapport = await construireRapportMission(id);
   if (!rapport) {
-    return NextResponse.json({ erreur: "Mission introuvable" }, { status: 404 });
+    return NextResponse.json({ erreur: "Activité introuvable" }, { status: 404 });
   }
 
-  const base = nomFichier(`Rapport fin de mission ${rapport.mission.nom}`);
+  const base = nomFichier(`Rapport de clôture d'activité ${rapport.mission.nom}`);
 
   if (format === "excel") {
     const buffer = await excelMission(rapport);

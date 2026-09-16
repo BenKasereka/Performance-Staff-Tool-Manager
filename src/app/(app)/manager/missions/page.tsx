@@ -35,14 +35,14 @@ export default async function PageMissions() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Missions</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Activités</h1>
           <p className="text-sm text-muted-foreground">
             Projets ponctuels et cycles de suivi récurrents.
           </p>
         </div>
         <DialogueMission
           membres={membres}
-          declencheur={<Button>Nouvelle mission</Button>}
+          declencheur={<Button>Nouvelle activité</Button>}
         />
       </div>
 
@@ -61,7 +61,7 @@ export default async function PageMissions() {
 
       {autres.length === 0 && enAttente.length === 0 ? (
         <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Aucune mission pour l&apos;instant. Créez-en une pour commencer à
+          Aucune activité pour l&apos;instant. Créez-en une pour commencer à
           suivre le travail de votre équipe.
         </p>
       ) : (
@@ -132,7 +132,7 @@ function CarteMission({
 
           {enAlerte && (
             <p className="text-xs font-medium text-destructive">
-              Échéance dépassée — clôturez ou prolongez cette mission.
+              Échéance dépassée — clôturez ou prolongez cette activité.
             </p>
           )}
         </div>

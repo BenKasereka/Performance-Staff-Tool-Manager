@@ -18,6 +18,7 @@ import {
   type LigneStatut,
 } from "@/components/graphiques/repartition-statuts";
 import { SelecteurPeriode } from "@/components/selecteur-periode";
+import { FiltreActivite } from "@/components/filtre-activite";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +28,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
 
@@ -92,7 +101,7 @@ export default async function PagePerformance({
 
       <div className="flex flex-wrap items-center gap-3">
         <SelecteurPeriode granularite={granularite} reference={reference} />
-        <FiltreMission missions={missions} valeur={missionFiltre} />
+        <FiltreActivite missions={missions} valeur={missionFiltre} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -132,7 +141,7 @@ export default async function PagePerformance({
       </div>
 
       {qualiteManquante.length > 0 && (
-        <Card className="border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+        <Card className="border-warning/40 bg-warning/5">
           <CardHeader>
             <CardTitle className="text-base">
               Qualité non évaluée pour {qualiteManquante.length} membre
@@ -167,82 +176,80 @@ export default async function PagePerformance({
               Aucune tâche sur cette période.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                    <th className="py-2 pr-3 font-medium">#</th>
-                    <th className="py-2 pr-3 font-medium">Membre</th>
-                    <th className="py-2 pr-3 text-right font-medium">Score</th>
-                    <th
-                      className="py-2 pr-3 text-right font-medium"
-                      title="Tâches terminées rapportées aux tâches déjà échues : celles dont l'échéance n'est pas encore arrivée n'entrent pas au dénominateur."
-                    >
-                      Complétion
-                    </th>
-                    <th className="py-2 pr-3 text-right font-medium">Délais</th>
-                    <th className="py-2 pr-3 text-right font-medium">Qualité</th>
-                    <th className="py-2 pr-3 text-right font-medium">Volume</th>
-                    <th className="py-2 text-right font-medium">Tâches</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classement.map((s, rang) => (
-                    <tr key={s.userId} className="border-b last:border-0">
-                      <td className="py-2 pr-3 tabular-nums text-muted-foreground">
-                        {rang + 1}
-                      </td>
-                      <td className="py-2 pr-3">
-                        <Link
-                          href={`/manager/performance/${s.userId}`}
-                          className="font-medium hover:underline"
-                        >
-                          {s.nom}
-                        </Link>
-                        {s.service && (
-                          <span className="text-muted-foreground">
-                            {" · "}
-                            {s.service}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 pr-3 text-right font-semibold tabular-nums">
-                        {s.scoreGlobal}
-                      </td>
-                      <td className="py-2 pr-3 text-right tabular-nums">
-                        {s.tauxCompletion} %
-                      </td>
-                      <td className="py-2 pr-3 text-right tabular-nums">
-                        {s.ponctualite} %
-                      </td>
-                      <td className="py-2 pr-3 text-right tabular-nums">
-                        {s.qualiteNonEvaluee ? (
-                          <span className="text-muted-foreground">non noté</span>
-                        ) : (
-                          `${s.noteMoyenneSur5} / 5`
-                        )}
-                      </td>
-                      <td className="py-2 pr-3 text-right tabular-nums">
-                        {s.volume}
-                      </td>
-                      <td className="py-2 text-right tabular-nums">
-                        <span
-                          title={`${s.nbTachesTotal} assignées sur la période, dont ${s.nbTachesExigibles} déjà échues ou terminées`}
-                        >
-                          {s.nbTachesTerminees}/{s.nbTachesExigibles}
+            <Table>
+              <TableHeader>
+                <TableRow className="text-xs uppercase text-muted-foreground">
+                  <TableHead>#</TableHead>
+                  <TableHead>Membre</TableHead>
+                  <TableHead className="text-right">Score</TableHead>
+                  <TableHead
+                    className="text-right"
+                    title="Tâches terminées rapportées aux tâches déjà échues : celles dont l'échéance n'est pas encore arrivée n'entrent pas au dénominateur."
+                  >
+                    Complétion
+                  </TableHead>
+                  <TableHead className="text-right">Délais</TableHead>
+                  <TableHead className="text-right">Qualité</TableHead>
+                  <TableHead className="text-right">Volume</TableHead>
+                  <TableHead className="text-right">Tâches</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {classement.map((s, rang) => (
+                  <TableRow key={s.userId}>
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {rang + 1}
+                    </TableCell>
+                    <TableCell className="whitespace-normal">
+                      <Link
+                        href={`/manager/performance/${s.userId}`}
+                        className="font-medium hover:underline"
+                      >
+                        {s.nom}
+                      </Link>
+                      {s.service && (
+                        <span className="text-muted-foreground">
+                          {" · "}
+                          {s.service}
                         </span>
-                        {s.nbTachesEnRetard > 0 && (
-                          <span className="text-destructive">
-                            {" "}
-                            · {s.nbTachesEnRetard} en retard
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold tabular-nums">
+                      {s.scoreGlobal}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {s.tauxCompletion} %
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {s.ponctualite} %
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {s.qualiteNonEvaluee ? (
+                        <span className="text-muted-foreground">non noté</span>
+                      ) : (
+                        `${s.noteMoyenneSur5} / 5`
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {s.volume}
+                    </TableCell>
+                    <TableCell className="whitespace-normal text-right tabular-nums">
+                      <span
+                        title={`${s.nbTachesTotal} assignées sur la période, dont ${s.nbTachesExigibles} déjà échues ou terminées`}
+                      >
+                        {s.nbTachesTerminees}/{s.nbTachesExigibles}
+                      </span>
+                      {s.nbTachesEnRetard > 0 && (
+                        <span className="text-destructive">
+                          {" "}
+                          · {s.nbTachesEnRetard} en retard
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
 
           {sansActivite.length > 0 && (
@@ -372,36 +379,4 @@ async function construireEvolution(missionId: string) {
   }
 
   return points;
-}
-
-function FiltreMission({
-  missions,
-  valeur,
-}: {
-  missions: { id: string; nom: string }[];
-  valeur: string;
-}) {
-  return (
-    <form className="flex items-center gap-2">
-      <label htmlFor="mission" className="sr-only">
-        Filtrer par mission
-      </label>
-      <select
-        id="mission"
-        name="mission"
-        defaultValue={valeur}
-        className="h-9 rounded-md border border-input bg-background px-2 text-sm shadow-xs"
-      >
-        <option value="">Toutes les missions</option>
-        {missions.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.nom}
-          </option>
-        ))}
-      </select>
-      <Button type="submit" variant="outline" size="sm">
-        Filtrer
-      </Button>
-    </form>
-  );
 }

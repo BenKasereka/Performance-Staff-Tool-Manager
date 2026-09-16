@@ -8,6 +8,7 @@ import {
   CentreNotifications,
   type NotificationAffichee,
 } from "@/components/centre-notifications";
+import { NavLinks } from "@/components/nav-links";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,17 +26,18 @@ type Props = {
 
 const LIENS_MANAGER = [
   { href: "/manager", libelle: "Tableau de bord" },
-  { href: "/manager/missions", libelle: "Missions" },
+  { href: "/manager/missions", libelle: "Activités" },
   { href: "/manager/taches", libelle: "Tâches" },
   { href: "/manager/performance", libelle: "Performance" },
   { href: "/manager/equipe", libelle: "Équipe" },
   { href: "/manager/organigramme", libelle: "Organigramme" },
+  { href: "/manager/rapports", libelle: "Rapports" },
 ];
 
 const LIENS_MEMBRE = [
   { href: "/mon-espace", libelle: "Mon espace" },
   { href: "/mon-espace/taches", libelle: "Mes tâches" },
-  { href: "/mon-espace/missions", libelle: "Mes missions" },
+  { href: "/mon-espace/missions", libelle: "Mes activités" },
 ];
 
 export async function AppShell({ utilisateur, children }: Props) {
@@ -71,13 +73,7 @@ export async function AppShell({ utilisateur, children }: Props) {
             Performance<span className="text-muted-foreground">.équipe</span>
           </Link>
 
-          <nav className="hidden flex-1 items-center gap-1 md:flex">
-            {liens.map((lien) => (
-              <Button key={lien.href} variant="ghost" size="sm" asChild>
-                <Link href={lien.href}>{lien.libelle}</Link>
-              </Button>
-            ))}
-          </nav>
+          <NavLinks liens={liens} className="hidden flex-1 items-center gap-1 md:flex" />
 
           <div className="ml-auto flex items-center gap-1">
             <CentreNotifications
@@ -122,15 +118,11 @@ export async function AppShell({ utilisateur, children }: Props) {
           </div>
         </div>
 
-        <nav className="flex items-center gap-1 overflow-x-auto border-t px-2 py-1 md:hidden">
-          {liens.map((lien) => (
-            <Button key={lien.href} variant="ghost" size="sm" asChild>
-              <Link href={lien.href} className="whitespace-nowrap">
-                {lien.libelle}
-              </Link>
-            </Button>
-          ))}
-        </nav>
+        <NavLinks
+          liens={liens}
+          className="flex items-center gap-1 overflow-x-auto border-t px-2 py-1 md:hidden"
+          linkClassName="whitespace-nowrap"
+        />
       </header>
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">

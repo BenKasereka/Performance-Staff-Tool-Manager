@@ -23,7 +23,7 @@ export default async function PageConnexion({
         </div>
 
         {compteCree && (
-          <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+          <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">
             Compte manager créé. Vous pouvez maintenant vous connecter.
           </p>
         )}

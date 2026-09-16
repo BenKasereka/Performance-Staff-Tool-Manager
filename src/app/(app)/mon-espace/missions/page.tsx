@@ -33,9 +33,9 @@ export default async function PageMesMissions() {
   if (missions.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Mes missions</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Mes activités</h1>
         <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Vous n&apos;êtes assigné à aucune mission pour l&apos;instant.
+          Vous n&apos;êtes assigné à aucune activité pour l&apos;instant.
         </p>
       </div>
     );
@@ -44,9 +44,9 @@ export default async function PageMesMissions() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Mes missions</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Mes activités</h1>
         <p className="text-sm text-muted-foreground">
-          Votre avancement personnel sur chaque mission.
+          Votre avancement personnel sur chaque activité.
         </p>
       </div>
 

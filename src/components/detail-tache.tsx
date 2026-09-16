@@ -122,7 +122,7 @@ export async function DetailTache({ tacheId, utilisateur, retour }: Props) {
               <dd>{LIBELLES_PERIODICITE[tache.periodicite]}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Mission</dt>
+              <dt className="text-muted-foreground">Activité</dt>
               <dd>
                 {tache.mission ? (
                   estManager ? (

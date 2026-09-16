@@ -62,7 +62,7 @@ export async function creerMission(
   });
 
   revalidatePath("/manager/missions");
-  return { succes: `Mission « ${nom} » créée.` };
+  return { succes: `Activité « ${nom} » créée.` };
 }
 
 export async function modifierMission(
@@ -76,7 +76,7 @@ export async function modifierMission(
   if (!parsed.success) return { erreur: parsed.error.issues[0].message };
 
   const mission = await prisma.mission.findUnique({ where: { id: missionId } });
-  if (!mission) return { erreur: "Mission introuvable." };
+  if (!mission) return { erreur: "Activité introuvable." };
 
   const { nom, description, type, dateDebut, dateFin, membres } = parsed.data;
   const fin = endOfDay(dateFin);
@@ -99,16 +99,16 @@ export async function modifierMission(
 
   revalidatePath("/manager/missions");
   revalidatePath(`/manager/missions/${missionId}`);
-  return { succes: "Mission mise à jour." };
+  return { succes: "Activité mise à jour." };
 }
 
 export async function demarrerMission(missionId: string): Promise<Resultat> {
   await exigerManager();
 
   const mission = await prisma.mission.findUnique({ where: { id: missionId } });
-  if (!mission) return { erreur: "Mission introuvable." };
+  if (!mission) return { erreur: "Activité introuvable." };
   if (mission.statut !== "EN_PREPARATION") {
-    return { erreur: "Seule une mission en préparation peut être démarrée." };
+    return { erreur: "Seule une activité en préparation peut être démarrée." };
   }
 
   await prisma.mission.update({
@@ -118,7 +118,7 @@ export async function demarrerMission(missionId: string): Promise<Resultat> {
 
   revalidatePath("/manager/missions");
   revalidatePath(`/manager/missions/${missionId}`);
-  return { succes: "Mission démarrée." };
+  return { succes: "Activité démarrée." };
 }
 
 const schemaProlongation = z.object({
@@ -160,9 +160,9 @@ export async function prolongerMission(
   const mission = await prisma.mission.findUnique({
     where: { id: parsed.data.missionId },
   });
-  if (!mission) return { erreur: "Mission introuvable." };
+  if (!mission) return { erreur: "Activité introuvable." };
   if (mission.statut === "CLOTUREE" || mission.statut === "ARCHIVEE") {
-    return { erreur: "Une mission clôturée ne peut plus être prolongée." };
+    return { erreur: "Une activité clôturée ne peut plus être prolongée." };
   }
 
   let nouvelle: Date;
@@ -214,7 +214,7 @@ export async function prolongerMission(
     membresProlongation.map((m) => m.userId),
     {
       type: "MISSION_PROLONGEE",
-      titre: `Mission prolongée : ${mission.nom}`,
+      titre: `Activité prolongée : ${mission.nom}`,
       contenu: `La nouvelle échéance est le ${formaterDate(nouvelle)}.${parsed.data.motif ? ` Motif : ${parsed.data.motif}` : ""}`,
       lien: "/mon-espace/missions",
       email: true,
@@ -224,16 +224,16 @@ export async function prolongerMission(
   revalidatePath("/manager");
   revalidatePath("/manager/missions");
   revalidatePath(`/manager/missions/${mission.id}`);
-  return { succes: "Mission prolongée." };
+  return { succes: "Activité prolongée." };
 }
 
 export async function cloturerMission(missionId: string): Promise<Resultat> {
   await exigerManager();
 
   const mission = await prisma.mission.findUnique({ where: { id: missionId } });
-  if (!mission) return { erreur: "Mission introuvable." };
+  if (!mission) return { erreur: "Activité introuvable." };
   if (mission.statut === "CLOTUREE" || mission.statut === "ARCHIVEE") {
-    return { erreur: "Cette mission est déjà clôturée." };
+    return { erreur: "Cette activité est déjà clôturée." };
   }
 
   await prisma.mission.update({
@@ -249,8 +249,8 @@ export async function cloturerMission(missionId: string): Promise<Resultat> {
     membres.map((m) => m.userId),
     {
       type: "MISSION_CLOTUREE",
-      titre: `Mission clôturée : ${mission.nom}`,
-      contenu: "La mission est terminée. Merci pour votre travail.",
+      titre: `Activité clôturée : ${mission.nom}`,
+      contenu: "L'activité est terminée. Merci pour votre travail.",
       lien: "/mon-espace/missions",
       email: true,
     },
@@ -259,16 +259,16 @@ export async function cloturerMission(missionId: string): Promise<Resultat> {
   revalidatePath("/manager");
   revalidatePath("/manager/missions");
   revalidatePath(`/manager/missions/${missionId}`);
-  return { succes: "Mission clôturée. Le rapport de fin de mission est disponible." };
+  return { succes: "Activité clôturée. Le rapport de clôture d'activité est disponible." };
 }
 
 export async function archiverMission(missionId: string): Promise<Resultat> {
   await exigerManager();
 
   const mission = await prisma.mission.findUnique({ where: { id: missionId } });
-  if (!mission) return { erreur: "Mission introuvable." };
+  if (!mission) return { erreur: "Activité introuvable." };
   if (mission.statut !== "CLOTUREE") {
-    return { erreur: "Seule une mission clôturée peut être archivée." };
+    return { erreur: "Seule une activité clôturée peut être archivée." };
   }
 
   await prisma.mission.update({
@@ -277,7 +277,7 @@ export async function archiverMission(missionId: string): Promise<Resultat> {
   });
 
   revalidatePath("/manager/missions");
-  return { succes: "Mission archivée." };
+  return { succes: "Activité archivée." };
 }
 
 export async function enregistrerBilanQualitatif(
@@ -289,7 +289,7 @@ export async function enregistrerBilanQualitatif(
   const missionId = String(donnees.get("missionId") ?? "");
 
   const mission = await prisma.mission.findUnique({ where: { id: missionId } });
-  if (!mission) return { erreur: "Mission introuvable." };
+  if (!mission) return { erreur: "Activité introuvable." };
 
   const lire = (champ: string) => String(donnees.get(champ) ?? "").trim() || null;
 

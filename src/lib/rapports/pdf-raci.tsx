@@ -88,7 +88,7 @@ export function PdfRaci({ rapport }: { rapport: RapportRaci }) {
             <Legende
               lettre="I"
               nom="Informé"
-              texte="Tenu au courant de l'avancement : encadrement et autres membres de la mission."
+              texte="Tenu au courant de l'avancement : encadrement et autres membres de l'équipe engagée."
               dernier
             />
           </View>
@@ -169,7 +169,7 @@ export function PdfRaci({ rapport }: { rapport: RapportRaci }) {
               Activité
             </Text>
             <Text style={[styles.celluleEnTete, { flex: COL.mission }]}>
-              Mission
+              Rattachée à
             </Text>
             <Text style={[styles.celluleEnTete, { flex: COL.r }]}>
               R — Responsable

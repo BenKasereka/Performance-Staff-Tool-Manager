@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { exigerManager } from "@/lib/auth-guards";
 import { construireOrganigramme, type NoeudOrganigramme } from "@/lib/organigramme";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,6 +12,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +52,7 @@ export default async function PageOrganigramme() {
       </div>
 
       {sansRattachement.length > 0 && (
-        <Card className="border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+        <Card className="border-warning/40 bg-warning/5">
           <CardHeader>
             <CardTitle className="text-base">
               {sansRattachement.length} personne
@@ -104,52 +113,46 @@ export default async function PageOrganigramme() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                    <th className="py-2 pr-4 font-medium">Encadrant</th>
-                    <th className="py-2 pr-4 font-medium">Subordonnés</th>
-                    <th className="py-2 pr-4 text-right font-medium">
-                      Tâches équipe
-                    </th>
-                    <th className="py-2 pr-4 text-right font-medium">
-                      Ouvertes
-                    </th>
-                    <th className="py-2 text-right font-medium">En retard</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {encadrants.map((n) => (
-                    <tr key={n.id} className="border-b last:border-0">
-                      <td className="py-2 pr-4">
-                        <span className="font-medium">{n.nom}</span>
-                        {n.poste && (
-                          <span className="text-muted-foreground">
-                            {" "}
-                            · {n.poste}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 pr-4 tabular-nums">
-                        {n.enfants.length}
-                      </td>
-                      <td className="py-2 pr-4 text-right tabular-nums">
-                        {n.chargeEquipe.total}
-                      </td>
-                      <td className="py-2 pr-4 text-right tabular-nums">
-                        {n.chargeEquipe.ouvertes}
-                      </td>
-                      <td
-                        className={`py-2 text-right tabular-nums ${n.chargeEquipe.enRetard > 0 ? "font-medium text-destructive" : ""}`}
-                      >
-                        {n.chargeEquipe.enRetard}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="text-xs uppercase text-muted-foreground">
+                  <TableHead>Encadrant</TableHead>
+                  <TableHead>Subordonnés</TableHead>
+                  <TableHead className="text-right">Tâches équipe</TableHead>
+                  <TableHead className="text-right">Ouvertes</TableHead>
+                  <TableHead className="text-right">En retard</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {encadrants.map((n) => (
+                  <TableRow key={n.id}>
+                    <TableCell className="whitespace-normal">
+                      <span className="font-medium">{n.nom}</span>
+                      {n.poste && (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {n.poste}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {n.enfants.length}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {n.chargeEquipe.total}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {n.chargeEquipe.ouvertes}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right tabular-nums ${n.chargeEquipe.enRetard > 0 ? "font-medium text-destructive" : ""}`}
+                    >
+                      {n.chargeEquipe.enRetard}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
@@ -189,16 +192,8 @@ function Noeud({
             {noeud.service}
           </span>
         )}
-        {noeud.role === "MANAGER" && (
-          <span className="rounded-md bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
-            Manager
-          </span>
-        )}
-        {!noeud.actif && (
-          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            Désactivé
-          </span>
-        )}
+        {noeud.role === "MANAGER" && <Badge variant="outline">Manager</Badge>}
+        {!noeud.actif && <Badge variant="neutral">Désactivé</Badge>}
         <span className="ml-auto text-xs tabular-nums text-muted-foreground">
           {noeud.chargePropre.total} tâche
           {noeud.chargePropre.total > 1 ? "s" : ""}

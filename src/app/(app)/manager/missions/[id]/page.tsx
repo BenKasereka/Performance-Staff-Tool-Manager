@@ -84,7 +84,7 @@ export default async function PageMission({
             href="/manager/missions"
             className="text-sm text-muted-foreground hover:underline"
           >
-            ← Missions
+            ← Activités
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -132,7 +132,7 @@ export default async function PageMission({
           {(mission.statut === "CLOTUREE" || mission.statut === "ARCHIVEE") && (
             <BoutonsRapport
               base={`/api/rapports/mission/${mission.id}`}
-              libelle="Rapport de fin de mission"
+              libelle="Rapport de clôture d'activité"
             />
           )}
           <BoutonsRapport
@@ -146,12 +146,12 @@ export default async function PageMission({
         <Card className="border-destructive/50 bg-destructive/5">
           <CardHeader>
             <CardTitle className="text-base text-destructive">
-              Cette mission attend votre décision
+              Cette activité attend votre décision
             </CardTitle>
             <CardDescription>
               L&apos;échéance du {formaterDate(mission.dateFinActuelle)} est
-              passée. La mission ne se clôture ni ne se prolonge d&apos;elle-même :
-              clôturez-la pour générer le rapport de fin de mission, ou
+              passée. L&apos;activité ne se clôture ni ne se prolonge d&apos;elle-même :
+              clôturez-la pour générer le rapport de clôture d&apos;activité, ou
               prolongez-la avec une nouvelle échéance.
             </CardDescription>
           </CardHeader>
@@ -164,12 +164,12 @@ export default async function PageMission({
           <Card className="border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
             <CardHeader>
               <CardTitle className="text-base">
-                Fin de mission proche
+                Fin d&apos;activité proche
               </CardTitle>
               <CardDescription>
                 {restants === 0
-                  ? "La mission se termine aujourd'hui."
-                  : `La mission se termine dans ${restants} jour${restants > 1 ? "s" : ""}.`}{" "}
+                  ? "L'activité se termine aujourd'hui."
+                  : `L'activité se termine dans ${restants} jour${restants > 1 ? "s" : ""}.`}{" "}
                 Préparez votre décision : clôture ou prolongation.
               </CardDescription>
             </CardHeader>
@@ -191,13 +191,13 @@ export default async function PageMission({
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Contribution par membre</CardTitle>
           <CardDescription>
-            Score calculé sur le périmètre de cette mission uniquement.
+            Score calculé sur le périmètre de cette activité uniquement.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {contributions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Aucun membre assigné à cette mission.
+              Aucun membre assigné à cette activité.
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -260,7 +260,7 @@ export default async function PageMission({
               Historique des prolongations
             </CardTitle>
             <CardDescription>
-              Conservé intégralement et repris dans le rapport de fin de mission.
+              Conservé intégralement et repris dans le rapport de clôture d&apos;activité.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -299,7 +299,7 @@ export default async function PageMission({
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Tâches de la mission</h2>
+          <h2 className="text-lg font-semibold">Tâches de l&apos;activité</h2>
           {missionAccepteTaches(mission.statut) && (
             <DialogueTache
               membres={mission.membres.map((m) => ({
@@ -321,7 +321,7 @@ export default async function PageMission({
             nom: m.user.nom,
           }))}
           missions={[{ id: mission.id, nom: mission.nom }]}
-          messageVide="Aucune tâche rattachée à cette mission."
+          messageVide="Aucune tâche rattachée à cette activité."
         />
       </section>
     </div>

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { calculerScores, type DetailScore } from "@/lib/kpi";
 import { estEnRetard, livreeEnRetard, LIBELLES_STATUT, statutAffiche } from "@/lib/taches";
 import { formaterDate, intervalle, type Granularite } from "@/lib/dates";
+import { construireOrganigramme, type NoeudOrganigramme } from "@/lib/organigramme";
+import { LIBELLES_STATUT_MISSION, LIBELLES_TYPE_MISSION } from "@/lib/missions";
 
 export type LigneTacheRapport = {
   titre: string;
@@ -349,6 +351,277 @@ async function avancementMission(missionId: string, debut: Date, fin: Date) {
 
     curseur = new Date(tranche.fin.getTime() + 1);
     garde++;
+  }
+
+  return points;
+}
+
+/**
+ * Rapport de fin de mission d'un manager : couvre tout son mandat, sur une
+ * période, en agrégeant toutes les activités et tâches de son équipe (sa
+ * descendance hiérarchique complète) — pas une seule activité isolée.
+ */
+
+function collecterDescendance(noeud: NoeudOrganigramme): string[] {
+  const ids: string[] = [];
+  for (const enfant of noeud.enfants) {
+    ids.push(enfant.id, ...collecterDescendance(enfant));
+  }
+  return ids;
+}
+
+export type RapportMandat = {
+  manager: { nom: string; poste: string | null };
+  periode: { debut: Date; fin: Date };
+  bilan: {
+    contexte: string | null;
+    qualitatif: string | null;
+    pointsForts: string | null;
+    defis: string | null;
+    recommandations: string | null;
+    conclusion: string | null;
+    informationsPratiques: string | null;
+  };
+  rubriques: { titre: string; contenu: string | null }[];
+  equipe: {
+    nom: string;
+    poste: string | null;
+    service: string | null;
+    superieur: string | null;
+    nbTaches: number;
+  }[];
+  activites: { nom: string; type: string; statut: string }[];
+  enSuspens: {
+    titre: string;
+    activite: string;
+    responsable: string;
+    echeance: string;
+    priorite: string;
+    statut: string;
+    enRetard: boolean;
+  }[];
+  chiffres: {
+    total: number;
+    terminees: number;
+    manquees: number;
+    enRetard: number;
+    tauxCompletion: number;
+    ponctualiteMoyenne: number;
+    qualiteMoyenne: number | null;
+  };
+  avancement: { periode: string; completion: number }[];
+  parMembre: DetailScore[];
+  prolongations: {
+    date: string;
+    ancienne: string;
+    nouvelle: string;
+    joursAjoutes: number;
+    motif: string | null;
+    auteur: string | null;
+    activite: string;
+  }[];
+  taches: LigneTacheRapport[];
+  genereLe: Date;
+};
+
+export async function construireRapportMandat(
+  managerId: string,
+  periodeDebut: Date,
+  periodeFin: Date,
+): Promise<RapportMandat | null> {
+  const manager = await prisma.user.findUnique({
+    where: { id: managerId },
+    select: { nom: true, poste: true },
+  });
+  if (!manager) return null;
+
+  const [{ noeuds }, rapport] = await Promise.all([
+    construireOrganigramme(),
+    prisma.rapportMandat.findFirst({
+      where: { managerId, periodeDebut, periodeFin },
+      include: { rubriques: { orderBy: { ordre: "asc" } } },
+    }),
+  ]);
+
+  const managerNoeud = noeuds.find((n) => n.id === managerId);
+  const equipeIds = managerNoeud ? collecterDescendance(managerNoeud) : [];
+
+  const taches =
+    equipeIds.length === 0
+      ? []
+      : await prisma.task.findMany({
+          where: {
+            echeance: { gte: periodeDebut, lte: periodeFin },
+            assignes: { some: { userId: { in: equipeIds } } },
+          },
+          include: INCLUDE,
+          orderBy: { echeance: "asc" },
+        });
+
+  const retenues = taches.filter((t) => t.statut !== "ANNULEE");
+  const terminees = retenues.filter((t) => t.statut === "TERMINEE");
+  const enRetard = retenues.filter((t) => estEnRetard(t));
+  const aLheure = terminees.filter((t) => !livreeEnRetard(t));
+  const notees = terminees.filter((t) => t.noteQualite);
+
+  const parMembre = await calculerScores({
+    debut: periodeDebut,
+    fin: periodeFin,
+    userIds: equipeIds,
+  });
+
+  const missionIds = [
+    ...new Set(taches.map((t) => t.missionId).filter((id): id is string => !!id)),
+  ];
+  const missions =
+    missionIds.length === 0
+      ? []
+      : await prisma.mission.findMany({
+          where: { id: { in: missionIds } },
+          include: {
+            prolongations: {
+              include: { auteur: { select: { nom: true } } },
+              orderBy: { dateDemande: "asc" },
+            },
+          },
+        });
+
+  const equipePersonnes =
+    equipeIds.length === 0
+      ? []
+      : await prisma.user.findMany({
+          where: { id: { in: equipeIds } },
+          select: {
+            nom: true,
+            poste: true,
+            service: true,
+            superieur: { select: { nom: true } },
+          },
+          orderBy: { nom: "asc" },
+        });
+
+  return {
+    manager: { nom: manager.nom, poste: manager.poste },
+    periode: { debut: periodeDebut, fin: periodeFin },
+    bilan: {
+      contexte: rapport?.bilanContexte ?? null,
+      qualitatif: rapport?.bilanQualitatif ?? null,
+      pointsForts: rapport?.bilanPointsForts ?? null,
+      defis: rapport?.bilanDefis ?? null,
+      recommandations: rapport?.bilanRecommandations ?? null,
+      conclusion: rapport?.bilanConclusion ?? null,
+      informationsPratiques: rapport?.informationsPratiques ?? null,
+    },
+    rubriques: (rapport?.rubriques ?? []).map((r) => ({
+      titre: r.titre,
+      contenu: r.contenu,
+    })),
+    equipe: equipePersonnes.map((p) => ({
+      nom: p.nom,
+      poste: p.poste,
+      service: p.service,
+      superieur: p.superieur?.nom ?? null,
+      nbTaches: taches.filter((t) => t.assignes.some((a) => a.user.nom === p.nom))
+        .length,
+    })),
+    activites: missions.map((m) => ({
+      nom: m.nom,
+      type: LIBELLES_TYPE_MISSION[m.type],
+      statut: LIBELLES_STATUT_MISSION[m.statut],
+    })),
+    enSuspens: retenues
+      .filter((t) => t.statut !== "TERMINEE")
+      .sort((a, b) => a.echeance.getTime() - b.echeance.getTime())
+      .map((t) => ({
+        titre: t.titre,
+        activite: t.mission?.nom ?? "Activité courante",
+        responsable: t.assignes.map((a) => a.user.nom).join(", ") || "Non assignée",
+        echeance: formaterDate(t.echeance),
+        priorite: t.priorite,
+        statut: LIBELLES_STATUT[statutAffiche(t)],
+        enRetard: estEnRetard(t),
+      })),
+    chiffres: {
+      total: retenues.length,
+      terminees: terminees.length,
+      manquees: retenues.length - terminees.length,
+      enRetard: enRetard.length,
+      tauxCompletion:
+        retenues.length > 0
+          ? Math.round((terminees.length / retenues.length) * 100)
+          : 0,
+      ponctualiteMoyenne:
+        terminees.length > 0
+          ? Math.round((aLheure.length / terminees.length) * 100)
+          : 0,
+      qualiteMoyenne:
+        notees.length > 0
+          ? Math.round(
+              (notees.reduce((s, t) => s + (t.noteQualite ?? 0), 0) /
+                notees.length) *
+                10,
+            ) / 10
+          : null,
+    },
+    avancement: await avancementPeriode(equipeIds, periodeDebut, periodeFin),
+    parMembre: [...parMembre].sort((a, b) => b.scoreGlobal - a.scoreGlobal),
+    prolongations: missions.flatMap((m) =>
+      m.prolongations.map((p) => ({
+        date: formaterDate(p.dateDemande),
+        ancienne: formaterDate(p.ancienneEcheance),
+        nouvelle: formaterDate(p.nouvelleEcheance),
+        joursAjoutes: differenceInCalendarDays(
+          p.nouvelleEcheance,
+          p.ancienneEcheance,
+        ),
+        motif: p.motif,
+        auteur: p.auteur?.nom ?? null,
+        activite: m.nom,
+      })),
+    ),
+    taches: taches.map(versLigne),
+    genereLe: new Date(),
+  };
+}
+
+/** Courbe d'avancement cumulée sur la période, pour toute l'équipe du manager. */
+async function avancementPeriode(userIds: string[], debut: Date, fin: Date) {
+  if (userIds.length === 0) return [];
+
+  const taches = await prisma.task.findMany({
+    where: {
+      assignes: { some: { userId: { in: userIds } } },
+      statut: { not: "ANNULEE" },
+      echeance: { gte: debut, lte: fin },
+    },
+    select: { echeance: true, statut: true, dateFin: true },
+  });
+  if (taches.length === 0) return [];
+
+  const jours2 = differenceInCalendarDays(fin, debut);
+  const pas2: Granularite = jours2 > 80 ? "mois" : "semaine";
+
+  const points: { periode: string; completion: number }[] = [];
+  let curseur2 = new Date(debut);
+  let garde2 = 0;
+
+  while (curseur2 <= fin && garde2 < 24) {
+    const tranche = intervalle(pas2, curseur2);
+    const limite = tranche.fin > fin ? fin : tranche.fin;
+
+    const echues = taches.filter((t) => t.echeance <= limite);
+    const faites = echues.filter(
+      (t) => t.statut === "TERMINEE" && t.dateFin && t.dateFin <= limite,
+    );
+
+    points.push({
+      periode: formaterDate(tranche.debut),
+      completion:
+        echues.length > 0 ? Math.round((faites.length / echues.length) * 100) : 0,
+    });
+
+    curseur2 = new Date(tranche.fin.getTime() + 1);
+    garde2++;
   }
 
   return points;

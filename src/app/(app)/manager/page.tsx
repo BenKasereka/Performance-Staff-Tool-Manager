@@ -81,13 +81,13 @@ export default async function PageManager() {
         <Card className="border-destructive/50 bg-destructive/5">
           <CardHeader>
             <CardTitle className="text-base text-destructive">
-              {missionsEnAttente.length} mission
+              {missionsEnAttente.length} activité
               {missionsEnAttente.length > 1 ? "s" : ""} en attente de votre
               décision
             </CardTitle>
             <CardDescription>
               L&apos;échéance est dépassée. Clôturez pour générer le rapport de
-              fin de mission, ou prolongez avec une nouvelle date.
+              clôture d&apos;activité, ou prolongez avec une nouvelle date.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -113,9 +113,9 @@ export default async function PageManager() {
       )}
 
       {missionsProches.length > 0 && (
-        <Card className="border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+        <Card className="border-warning/40 bg-warning/5">
           <CardHeader>
-            <CardTitle className="text-base">Missions bientôt échues</CardTitle>
+            <CardTitle className="text-base">Activités bientôt échues</CardTitle>
             <CardDescription>
               Préparez votre décision avant la date de fin.
             </CardDescription>

@@ -102,6 +102,7 @@ model User {
   notifications     Notification[]
   prolongations     MissionProlongation[] @relation("ProlongationAuteur")
   piecesJointes     Attachment[]
+  rapportsMandat    RapportMandat[]        @relation("RapportMandatManager")
 
   @@index([role])
   @@index([superieurId])
@@ -307,4 +308,47 @@ model KpiWeightConfig {
   libelle String
   poids   Float  @default(0.25)
   updatedAt DateTime @updatedAt
+}
+
+/**
+ * Rapport de fin de mission d'un manager : couvre tout son mandat (période de
+ * contrat), pas une seule activité — cf. §4-5 de l'audit du 16/09/2026. Les
+ * chiffres (scores, tâches) se recalculent à la demande sur la période ;
+ * seuls les textes rédigés par le manager sont persistés ici.
+ */
+model RapportMandat {
+  id           String   @id @default(cuid())
+  managerId    String
+  periodeDebut DateTime
+  periodeFin   DateTime
+
+  bilanContexte         String?
+  bilanQualitatif       String?
+  bilanPointsForts      String?
+  bilanDefis            String?
+  bilanRecommandations  String?
+  bilanConclusion       String?
+  informationsPratiques String?
+
+  genereLe  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  manager   User                    @relation("RapportMandatManager", fields: [managerId], references: [id], onDelete: Cascade)
+  rubriques RapportMandatRubrique[]
+
+  @@index([managerId])
+}
+
+/** Section libre du rapport de mandat (ex. « Gestion des stocks » pour une mission logistique). */
+model RapportMandatRubrique {
+  id        String  @id @default(cuid())
+  rapportId String
+  ordre     Int
+  titre     String
+  contenu   String?
+
+  rapport RapportMandat @relation(fields: [rapportId], references: [id], onDelete: Cascade)
+
+  @@index([rapportId])
 }

@@ -115,7 +115,7 @@ function DialogueProlongation({
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Prolonger la mission</DialogTitle>
+          <DialogTitle>Prolonger l&apos;activité</DialogTitle>
           <DialogDescription>
             Échéance actuelle : {formaterDate(echeanceActuelle)}. Chaque
             prolongation est conservée dans l&apos;historique.

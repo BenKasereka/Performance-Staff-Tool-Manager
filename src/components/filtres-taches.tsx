@@ -4,6 +4,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { LIBELLES_STATUT } from "@/lib/taches";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Props = {
   membres?: { id: string; nom: string }[];
@@ -11,8 +18,8 @@ type Props = {
   afficherOrigine?: boolean;
 };
 
-const CLASSE_SELECT =
-  "h-9 rounded-md border border-input bg-background px-2 text-sm shadow-xs";
+/** Radix Select refuse une valeur vide : ce jeton représente « aucun filtre ». */
+const TOUS = "__TOUS__";
 
 export function FiltresTaches({
   membres,
@@ -25,7 +32,7 @@ export function FiltresTaches({
 
   function definir(cle: string, valeur: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (valeur) params.set(cle, valeur);
+    if (valeur && valeur !== TOUS) params.set(cle, valeur);
     else params.delete(cle);
     router.push(`${pathname}?${params.toString()}`);
   }
@@ -45,63 +52,75 @@ export function FiltresTaches({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {membres && (
-        <select
-          aria-label="Filtrer par membre"
-          className={CLASSE_SELECT}
-          value={searchParams.get("membre") ?? ""}
-          onChange={(e) => definir("membre", e.target.value)}
+        <Select
+          value={searchParams.get("membre") ?? TOUS}
+          onValueChange={(v) => definir("membre", v)}
         >
-          <option value="">Tous les membres</option>
-          {membres.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nom}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger aria-label="Filtrer par membre" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={TOUS}>Tous les membres</SelectItem>
+            {membres.map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.nom}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       {missions && (
-        <select
-          aria-label="Filtrer par mission"
-          className={CLASSE_SELECT}
-          value={searchParams.get("mission") ?? ""}
-          onChange={(e) => definir("mission", e.target.value)}
+        <Select
+          value={searchParams.get("mission") ?? TOUS}
+          onValueChange={(v) => definir("mission", v)}
         >
-          <option value="">Toutes les missions</option>
-          <option value="aucune">Hors mission</option>
-          {missions.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nom}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger aria-label="Filtrer par activité" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={TOUS}>Toutes les activités</SelectItem>
+            <SelectItem value="aucune">Hors activité</SelectItem>
+            {missions.map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.nom}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
-      <select
-        aria-label="Filtrer par statut"
-        className={CLASSE_SELECT}
-        value={searchParams.get("statut") ?? ""}
-        onChange={(e) => definir("statut", e.target.value)}
+      <Select
+        value={searchParams.get("statut") ?? TOUS}
+        onValueChange={(v) => definir("statut", v)}
       >
-        <option value="">Tous les statuts</option>
-        {Object.entries(LIBELLES_STATUT).map(([valeur, libelle]) => (
-          <option key={valeur} value={valeur}>
-            {libelle}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger aria-label="Filtrer par statut" size="sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={TOUS}>Tous les statuts</SelectItem>
+          {Object.entries(LIBELLES_STATUT).map(([valeur, libelle]) => (
+            <SelectItem key={valeur} value={valeur}>
+              {libelle}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {afficherOrigine && (
-        <select
-          aria-label="Filtrer par origine"
-          className={CLASSE_SELECT}
-          value={searchParams.get("origine") ?? ""}
-          onChange={(e) => definir("origine", e.target.value)}
+        <Select
+          value={searchParams.get("origine") ?? TOUS}
+          onValueChange={(v) => definir("origine", v)}
         >
-          <option value="">Toutes origines</option>
-          <option value="MANAGER">Assignées par le manager</option>
-          <option value="MEMBRE">Auto-déclarées</option>
-        </select>
+          <SelectTrigger aria-label="Filtrer par origine" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={TOUS}>Toutes origines</SelectItem>
+            <SelectItem value="MANAGER">Assignées par le manager</SelectItem>
+            <SelectItem value="MEMBRE">Auto-déclarées</SelectItem>
+          </SelectContent>
+        </Select>
       )}
 
       {filtreActif && (

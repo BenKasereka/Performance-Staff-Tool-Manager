@@ -21,7 +21,7 @@ export default async function PageInscription() {
             Créer le compte manager
           </h1>
           <p className="text-sm text-muted-foreground">
-            Ce compte administrera l&apos;équipe, les missions et les
+            Ce compte administrera l&apos;équipe, les activités et les
             évaluations.
           </p>
         </div>

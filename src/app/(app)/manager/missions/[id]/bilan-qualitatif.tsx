@@ -25,8 +25,8 @@ export type Bilan = {
 const RUBRIQUES = [
   {
     champ: "contexte",
-    label: "Contexte et objet de la mission",
-    aide: "Pourquoi cette mission a été lancée, dans quel environnement, avec quelles contraintes.",
+    label: "Contexte et objet de l'activité",
+    aide: "Pourquoi cette activité a été lancée, dans quel environnement, avec quelles contraintes.",
     exemple:
       "La refonte répondait à une hausse des réclamations clients sur le parcours de commande…",
     lignes: 5,
@@ -34,7 +34,7 @@ const RUBRIQUES = [
   {
     champ: "synthese",
     label: "Synthèse générale",
-    aide: "Votre lecture d'ensemble du déroulement de la mission.",
+    aide: "Votre lecture d'ensemble du déroulement de l'activité.",
     exemple: "L'équipe a tenu les délais sur la phase de cadrage…",
     lignes: 5,
   },
@@ -86,8 +86,8 @@ export function BilanQualitatif({
       <CardHeader>
         <CardTitle className="text-base">Bilan qualitatif du manager</CardTitle>
         <CardDescription>
-          Ces six rubriques forment les sections rédigées du rapport de fin de
-          mission. Les parties laissées vides apparaissent comme « non
+          Ces six rubriques forment les sections rédigées du rapport de
+          clôture d&apos;activité. Les parties laissées vides apparaissent comme « non
           renseigné » dans le PDF et restent complétables ensuite.{" "}
           <span className="font-medium text-foreground">
             {remplies} / {RUBRIQUES.length} renseignées.

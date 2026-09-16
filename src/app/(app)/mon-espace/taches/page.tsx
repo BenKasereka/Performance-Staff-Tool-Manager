@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
-const GRANULARITES: Granularite[] = ["jour", "semaine", "mois"];
+const GRANULARITES = ["jour", "semaine", "mois"] as const satisfies Granularite[];
 
 export default async function PageMesTaches({
   searchParams,
@@ -25,8 +25,10 @@ export default async function PageMesTaches({
   const utilisateur = await exigerUtilisateur();
   const params = await searchParams;
 
-  const granularite = GRANULARITES.includes(params.g as Granularite)
-    ? (params.g as Granularite)
+  const granularite = GRANULARITES.includes(
+    params.g as (typeof GRANULARITES)[number],
+  )
+    ? (params.g as (typeof GRANULARITES)[number])
     : "semaine";
   const reference = params.d ? new Date(String(params.d)) : new Date();
   const periode = intervalle(granularite, reference);

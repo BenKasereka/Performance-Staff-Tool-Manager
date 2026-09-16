@@ -1,4 +1,5 @@
 import type { Priorite, Periodicite, Task, TaskStatut } from "@prisma/client";
+import type { BadgeVariant } from "@/components/ui/badge";
 
 /** Statut affiché : « en retard » est déduit, jamais stocké (cf. README). */
 export type StatutAffiche = TaskStatut | "EN_RETARD";
@@ -73,18 +74,28 @@ export const LIBELLES_PERIODICITE: Record<Periodicite, string> = {
   PONCTUELLE: "Ponctuelle",
 };
 
-export const CLASSES_STATUT: Record<StatutAffiche, string> = {
-  A_FAIRE: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  EN_COURS: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-  EN_ATTENTE: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  TERMINEE: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-  ANNULEE:
-    "bg-slate-100 text-slate-500 line-through dark:bg-slate-900 dark:text-slate-400",
-  EN_RETARD: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+/** Variante de badge (voir ui/badge.tsx) associée à chaque statut affiché. */
+export const VARIANT_STATUT: Record<StatutAffiche, BadgeVariant> = {
+  A_FAIRE: "neutral",
+  EN_COURS: "info",
+  EN_ATTENTE: "warning",
+  TERMINEE: "success",
+  ANNULEE: "neutral",
+  EN_RETARD: "destructive",
 };
 
-export const CLASSES_PRIORITE: Record<Priorite, string> = {
-  BASSE: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-  MOYENNE: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200",
-  HAUTE: "bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200",
+/** Classes pour les usages hors badge (cellules de calendrier). */
+export const CLASSES_STATUT: Record<StatutAffiche, string> = {
+  A_FAIRE: "bg-muted text-muted-foreground",
+  EN_COURS: "bg-primary/10 text-primary dark:bg-primary/20",
+  EN_ATTENTE: "bg-warning/10 text-warning dark:bg-warning/20",
+  TERMINEE: "bg-success/10 text-success dark:bg-success/20",
+  ANNULEE: "bg-muted text-muted-foreground line-through",
+  EN_RETARD: "bg-destructive/10 text-destructive dark:bg-destructive/20",
+};
+
+export const VARIANT_PRIORITE: Record<Priorite, BadgeVariant> = {
+  BASSE: "neutral",
+  MOYENNE: "info",
+  HAUTE: "warning",
 };

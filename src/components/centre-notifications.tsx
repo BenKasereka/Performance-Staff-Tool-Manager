@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { Bell } from "lucide-react";
 import type { NotificationType } from "@prisma/client";
 
 import { marquerLue, marquerToutesLues } from "@/lib/actions/notifications";
@@ -56,9 +57,9 @@ export function CentreNotifications({
           className="relative"
           aria-label={`Notifications${nonLues > 0 ? ` — ${nonLues} non lues` : ""}`}
         >
-          <span aria-hidden>🔔</span>
+          <Bell aria-hidden className="size-4" />
           {nonLues > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-white">
+            <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
               {nonLues > 9 ? "9+" : nonLues}
             </span>
           )}

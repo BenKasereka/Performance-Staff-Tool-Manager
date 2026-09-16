@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
+const fontSans = IBM_Plex_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fontMono = IBM_Plex_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
+const fontHeading = Fraunces({
+  variable: "--font-heading",
+  subsets: ["latin"],
+  weight: "variable",
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -23,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${fontSans.variable} ${fontMono.variable} ${fontHeading.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-muted/30">
         {children}

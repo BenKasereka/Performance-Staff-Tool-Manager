@@ -50,10 +50,10 @@ export function DialogueMission({ membres, mission, declencheur }: Props) {
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {enEdition ? "Modifier la mission" : "Nouvelle mission"}
+            {enEdition ? "Modifier l'activité" : "Nouvelle activité"}
           </DialogTitle>
           <DialogDescription>
-            Une mission-projet a une fin définie. Un cycle récurrent sert au
+            Une activité-projet a une fin définie. Un cycle récurrent sert au
             suivi continu de l&apos;activité courante.
           </DialogDescription>
         </DialogHeader>
@@ -92,7 +92,7 @@ export function DialogueMission({ membres, mission, declencheur }: Props) {
               defaultValue={mission?.type ?? "PROJET"}
               className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
             >
-              <option value="PROJET">Mission-projet (début et fin définis)</option>
+              <option value="PROJET">Activité-projet (début et fin définis)</option>
               <option value="CYCLE_RECURRENT">
                 Cycle récurrent (suivi continu)
               </option>
@@ -146,7 +146,7 @@ export function DialogueMission({ membres, mission, declencheur }: Props) {
           {!enEdition && (
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <Checkbox name="demarrer" value="1" defaultChecked />
-              Démarrer la mission immédiatement
+              Démarrer l&apos;activité immédiatement
             </label>
           )}
 
@@ -162,7 +162,7 @@ export function DialogueMission({ membres, mission, declencheur }: Props) {
                 ? "Enregistrement…"
                 : enEdition
                   ? "Enregistrer"
-                  : "Créer la mission"}
+                  : "Créer l'activité"}
             </Button>
           </DialogFooter>
         </form>

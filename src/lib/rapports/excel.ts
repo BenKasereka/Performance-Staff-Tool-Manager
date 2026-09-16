@@ -2,7 +2,7 @@ import ExcelJS from "exceljs";
 
 import { LIBELLES_CRITERE } from "@/lib/kpi";
 import { formaterDate } from "@/lib/dates";
-import type { RapportIndividuel, RapportMission } from "./donnees";
+import type { RapportIndividuel, RapportMandat, RapportMission } from "./donnees";
 import type { RapportRaci } from "./raci";
 
 const ENTETE_FOND = "FF0B0B0B";
@@ -97,9 +97,9 @@ export async function excelMission(rapport: RapportMission): Promise<Buffer> {
   const synthese = classeur.addWorksheet("Synthèse");
   ajusterColonnes(synthese, [34, 30]);
 
-  synthese.addRow(["Rapport de fin de mission"]).font = { bold: true, size: 14 };
+  synthese.addRow(["Rapport de clôture d'activité"]).font = { bold: true, size: 14 };
   synthese.addRow([]);
-  synthese.addRow(["Mission", rapport.mission.nom]);
+  synthese.addRow(["Activité", rapport.mission.nom]);
   synthese.addRow(["Description", rapport.mission.description ?? "—"]);
   synthese.addRow(["Début", formaterDate(rapport.mission.dateDebut)]);
   synthese.addRow([
@@ -202,6 +202,149 @@ export async function excelMission(rapport: RapportMission): Promise<Buffer> {
   return Buffer.from(buffer);
 }
 
+export async function excelMandat(rapport: RapportMandat): Promise<Buffer> {
+  const classeur = creerClasseur();
+
+  const synthese = classeur.addWorksheet("Synthèse");
+  ajusterColonnes(synthese, [34, 30]);
+
+  synthese.addRow(["Rapport de fin de mission"]).font = { bold: true, size: 14 };
+  synthese.addRow([]);
+  synthese.addRow(["Manager", rapport.manager.nom]);
+  synthese.addRow(["Fonction", rapport.manager.poste ?? "—"]);
+  synthese.addRow(["Début du mandat", formaterDate(rapport.periode.debut)]);
+  synthese.addRow(["Fin du mandat", formaterDate(rapport.periode.fin)]);
+  synthese.addRow(["Équipe", rapport.equipe.map((m) => m.nom).join(", ") || "—"]);
+  synthese.addRow([
+    "Activités couvertes",
+    rapport.activites.map((a) => a.nom).join(", ") || "—",
+  ]);
+  synthese.addRow([]);
+  synthese.addRow(["Tâches planifiées", rapport.chiffres.total]);
+  synthese.addRow(["Réalisées", rapport.chiffres.terminees]);
+  synthese.addRow(["Non abouties", rapport.chiffres.manquees]);
+  synthese.addRow(["Encore en retard", rapport.chiffres.enRetard]);
+  synthese.addRow(["Taux de complétion", `${rapport.chiffres.tauxCompletion} %`]);
+  synthese.addRow([
+    "Ponctualité moyenne",
+    `${rapport.chiffres.ponctualiteMoyenne} %`,
+  ]);
+  synthese.addRow([
+    "Qualité moyenne",
+    rapport.chiffres.qualiteMoyenne === null
+      ? "non évaluée"
+      : `${rapport.chiffres.qualiteMoyenne} / 5`,
+  ]);
+  synthese.addRow([]);
+  synthese.addRow(["Bilan qualitatif du manager"]).font = { bold: true };
+  const bilan = synthese.addRow([rapport.bilan.qualitatif ?? "—"]);
+  bilan.alignment = { wrapText: true, vertical: "top" };
+
+  if (rapport.rubriques.length > 0) {
+    const rubriques = classeur.addWorksheet("Rubriques complémentaires");
+    ajusterColonnes(rubriques, [30, 70]);
+    styliserEntete(rubriques.addRow(["Rubrique", "Contenu"]));
+    for (const r of rapport.rubriques) {
+      const ligne = rubriques.addRow([r.titre, r.contenu ?? "—"]);
+      ligne.alignment = { wrapText: true, vertical: "top" };
+    }
+  }
+
+  const membres = classeur.addWorksheet("Performance par membre");
+  ajusterColonnes(membres, [6, 26, 20, 10, 12, 10, 10, 10, 10]);
+  styliserEntete(
+    membres.addRow([
+      "Rang",
+      "Membre",
+      "Poste",
+      "Score",
+      "Complétion",
+      "Délais",
+      "Qualité",
+      "Terminées",
+      "Exigibles",
+    ]),
+  );
+  rapport.parMembre.forEach((m, i) => {
+    membres.addRow([
+      i + 1,
+      m.nom,
+      m.poste ?? "—",
+      m.scoreGlobal,
+      m.tauxCompletion,
+      m.ponctualite,
+      m.qualiteNonEvaluee ? "—" : m.noteMoyenneSur5,
+      m.nbTachesTerminees,
+      m.nbTachesExigibles,
+    ]);
+  });
+
+  const suspens = classeur.addWorksheet("Checklist de passation");
+  ajusterColonnes(suspens, [40, 22, 22, 14, 12, 14]);
+  styliserEntete(
+    suspens.addRow([
+      "Activité",
+      "Rattachée à",
+      "Responsable",
+      "Échéance",
+      "Priorité",
+      "Statut",
+    ]),
+  );
+  for (const a of rapport.enSuspens) {
+    const ligne = suspens.addRow([
+      a.titre,
+      a.activite,
+      a.responsable,
+      a.echeance,
+      a.priorite,
+      a.statut,
+    ]);
+    if (a.enRetard) {
+      ligne.getCell(4).font = { color: { argb: "FFD03B3B" }, bold: true };
+    }
+  }
+
+  if (rapport.prolongations.length > 0) {
+    const prolongations = classeur.addWorksheet("Prolongations");
+    ajusterColonnes(prolongations, [22, 16, 16, 16, 14, 22, 44]);
+    styliserEntete(
+      prolongations.addRow([
+        "Activité",
+        "Décidée le",
+        "Ancienne échéance",
+        "Nouvelle échéance",
+        "Jours ajoutés",
+        "Auteur",
+        "Motif",
+      ]),
+    );
+    for (const p of rapport.prolongations) {
+      prolongations.addRow([
+        p.activite,
+        p.date,
+        p.ancienne,
+        p.nouvelle,
+        p.joursAjoutes,
+        p.auteur ?? "—",
+        p.motif ?? "—",
+      ]);
+    }
+  }
+
+  const avancement = classeur.addWorksheet("Avancement");
+  ajusterColonnes(avancement, [20, 18]);
+  styliserEntete(avancement.addRow(["Période", "Complétion (%)"]));
+  for (const p of rapport.avancement) {
+    avancement.addRow([p.periode, p.completion]);
+  }
+
+  ajouterFeuilleTaches(classeur, rapport.taches);
+
+  const buffer = await classeur.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
 function ajouterFeuilleTaches(
   classeur: ExcelJS.Workbook,
   taches: RapportIndividuel["taches"],
@@ -213,7 +356,7 @@ function ajouterFeuilleTaches(
     feuille.addRow([
       "Tâche",
       "Assignée à",
-      "Mission",
+      "Activité",
       "Échéance",
       "Statut",
       "Terminée le",
@@ -266,14 +409,14 @@ export async function excelRaci(rapport: RapportRaci): Promise<Buffer> {
   synthese.addRow(["R — Responsable", "Exécute l'activité"]);
   synthese.addRow(["A — Approbateur", "Valide et rend des comptes (N+1 du responsable)"]);
   synthese.addRow(["C — Consulté", "A créé l'activité ou est intervenu dans sa discussion"]);
-  synthese.addRow(["I — Informé", "Encadrement et autres membres de la mission"]);
+  synthese.addRow(["I — Informé", "Encadrement et autres membres de l'équipe engagée"]);
 
   const matrice = classeur.addWorksheet("Matrice RACI");
   ajusterColonnes(matrice, [44, 22, 26, 26, 24, 30, 12, 14, 12, 12, 12]);
   styliserEntete(
     matrice.addRow([
       "Activité",
-      "Mission",
+      "Rattachée à",
       "R — Responsable",
       "A — Approbateur",
       "C — Consulté",

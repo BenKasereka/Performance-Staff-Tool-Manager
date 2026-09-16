@@ -1,0 +1,159 @@
+import { subYears } from "date-fns";
+
+import { exigerManager } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
+import { construireRapportMandat } from "@/lib/rapports/donnees";
+import { formaterDate, versValeurInput } from "@/lib/dates";
+import { BoutonsRapport } from "@/components/boutons-rapport";
+import { SelecteurPeriodeMandat } from "@/components/selecteur-periode-mandat";
+import { FormulaireRapportMandat } from "@/components/formulaire-rapport-mandat";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+export const dynamic = "force-dynamic";
+
+export default async function PageRapportFinMission({
+  searchParams,
+}: PageProps<"/manager/rapport-fin-mission">) {
+  const manager = await exigerManager();
+  const params = await searchParams;
+
+  const maintenant = new Date();
+  const periodeDebut = params.debut
+    ? new Date(String(params.debut))
+    : subYears(maintenant, 1);
+  const periodeFin = params.fin ? new Date(String(params.fin)) : maintenant;
+
+  const [rapport, existant] = await Promise.all([
+    construireRapportMandat(manager.id, periodeDebut, periodeFin),
+    prisma.rapportMandat.findFirst({
+      where: { managerId: manager.id, periodeDebut, periodeFin },
+      include: { rubriques: { orderBy: { ordre: "asc" } } },
+    }),
+  ]);
+
+  const query = `debut=${versValeurInput(periodeDebut)}&fin=${versValeurInput(periodeFin)}`;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Rapport de fin de mission
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Couvre tout votre mandat sur la période choisie : toutes vos
+            activités et celles de votre équipe, pas une seule activité
+            isolée.
+          </p>
+        </div>
+        <BoutonsRapport
+          base={`/api/rapports/mandat?${query}`}
+          libelle="Rapport de fin de mission"
+        />
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Période du mandat</CardTitle>
+          <CardDescription>
+            Définissez-la avant de rédiger le bilan ci-dessous — changer la
+            période recharge la page.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SelecteurPeriodeMandat debut={periodeDebut} fin={periodeFin} />
+        </CardContent>
+      </Card>
+
+      {!rapport ? (
+        <p className="text-sm text-destructive">
+          Impossible de charger les données pour cette période.
+        </p>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Équipe couverte</CardDescription>
+                <CardTitle className="text-3xl tabular-nums">
+                  {rapport.equipe.length}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Activités couvertes</CardDescription>
+                <CardTitle className="text-3xl tabular-nums">
+                  {rapport.activites.length}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Tâches sur la période</CardDescription>
+                <CardTitle className="text-3xl tabular-nums">
+                  {rapport.chiffres.total}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Encore en suspens</CardDescription>
+                <CardTitle
+                  className={`text-3xl tabular-nums ${rapport.enSuspens.length > 0 ? "text-warning" : ""}`}
+                >
+                  {rapport.enSuspens.length}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+
+          {rapport.equipe.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Aucun collaborateur rattaché à votre organigramme pour le
+              moment : rendez-vous dans « Équipe » pour définir qui vous est
+              rattaché avant de générer ce rapport.
+            </p>
+          )}
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">
+                Bilan du {formaterDate(periodeDebut)} au{" "}
+                {formaterDate(periodeFin)}
+              </CardTitle>
+              <CardDescription>
+                Ces textes sont repris tels quels dans le rapport téléchargé.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormulaireRapportMandat
+                valeurs={{
+                  periodeDebut: versValeurInput(periodeDebut),
+                  periodeFin: versValeurInput(periodeFin),
+                  bilanContexte: existant?.bilanContexte ?? "",
+                  bilanQualitatif: existant?.bilanQualitatif ?? "",
+                  bilanPointsForts: existant?.bilanPointsForts ?? "",
+                  bilanDefis: existant?.bilanDefis ?? "",
+                  bilanRecommandations: existant?.bilanRecommandations ?? "",
+                  bilanConclusion: existant?.bilanConclusion ?? "",
+                  informationsPratiques: existant?.informationsPratiques ?? "",
+                  rubriques: (existant?.rubriques ?? []).map((r) => ({
+                    titre: r.titre,
+                    contenu: r.contenu ?? "",
+                  })),
+                }}
+              />
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}

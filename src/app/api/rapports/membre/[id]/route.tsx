@@ -12,7 +12,14 @@ import { nomFichier } from "@/lib/rapports/nommage";
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-const GRANULARITES: Granularite[] = ["jour", "semaine", "mois"];
+const GRANULARITES: Granularite[] = [
+  "jour",
+  "semaine",
+  "mois",
+  "trimestre",
+  "semestre",
+  "annee",
+];
 
 export async function GET(
   requete: Request,
@@ -48,11 +55,11 @@ export async function GET(
       select: { nom: true, dateDebut: true, dateFinActuelle: true },
     });
     if (!mission) {
-      return NextResponse.json({ erreur: "Mission introuvable" }, { status: 404 });
+      return NextResponse.json({ erreur: "Activité introuvable" }, { status: 404 });
     }
     debut = mission.dateDebut;
     fin = mission.dateFinActuelle;
-    libelle = `Mission ${mission.nom}`;
+    libelle = `Activité ${mission.nom}`;
   } else {
     const periode = intervalle(granularite, reference);
     debut = periode.debut;

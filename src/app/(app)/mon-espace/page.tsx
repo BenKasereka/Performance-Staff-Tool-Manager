@@ -96,7 +96,7 @@ export default async function PageMonEspace() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Missions en cours</CardDescription>
+            <CardDescription>Activités en cours</CardDescription>
             <CardTitle className="text-3xl tabular-nums">{nbMissions}</CardTitle>
           </CardHeader>
         </Card>

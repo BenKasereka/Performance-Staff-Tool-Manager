@@ -1,57 +1,45 @@
 import type { MissionStatut, Priorite } from "@prisma/client";
 
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import {
-  CLASSES_STATUT_MISSION,
+  VARIANT_STATUT_MISSION,
   LIBELLES_STATUT_MISSION,
 } from "@/lib/missions";
 import {
-  CLASSES_PRIORITE,
-  CLASSES_STATUT,
+  VARIANT_PRIORITE,
+  VARIANT_STATUT,
   LIBELLES_PRIORITE,
   LIBELLES_STATUT,
   type StatutAffiche,
 } from "@/lib/taches";
 
-const BASE =
-  "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap";
-
 export function BadgeStatutTache({ statut }: { statut: StatutAffiche }) {
   return (
-    <span className={cn(BASE, CLASSES_STATUT[statut])}>
+    <Badge
+      variant={VARIANT_STATUT[statut]}
+      className={statut === "ANNULEE" ? "line-through" : undefined}
+    >
       {LIBELLES_STATUT[statut]}
-    </span>
+    </Badge>
   );
 }
 
 export function BadgePriorite({ priorite }: { priorite: Priorite }) {
-  return (
-    <span className={cn(BASE, CLASSES_PRIORITE[priorite])}>
-      {LIBELLES_PRIORITE[priorite]}
-    </span>
-  );
+  return <Badge variant={VARIANT_PRIORITE[priorite]}>{LIBELLES_PRIORITE[priorite]}</Badge>;
 }
 
 export function BadgeStatutMission({ statut }: { statut: MissionStatut }) {
   return (
-    <span className={cn(BASE, CLASSES_STATUT_MISSION[statut])}>
+    <Badge variant={VARIANT_STATUT_MISSION[statut]}>
       {LIBELLES_STATUT_MISSION[statut]}
-    </span>
+    </Badge>
   );
 }
 
 export function BadgeOrigine({ origine }: { origine: "MANAGER" | "MEMBRE" }) {
   return (
-    <span
-      className={cn(
-        BASE,
-        "border",
-        origine === "MANAGER"
-          ? "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950 dark:text-violet-200"
-          : "border-teal-200 bg-teal-50 text-teal-700 dark:border-teal-900 dark:bg-teal-950 dark:text-teal-200",
-      )}
-    >
+    <Badge variant={origine === "MANAGER" ? "outline" : "secondary"}>
       {origine === "MANAGER" ? "Assignée" : "Auto-déclarée"}
-    </span>
+    </Badge>
   );
 }
