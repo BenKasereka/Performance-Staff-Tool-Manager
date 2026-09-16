@@ -144,7 +144,7 @@ export default async function PageMission({
       </div>
 
       {mission.statut === "EN_ATTENTE_DECISION" && (
-        <Card className="border-destructive/50 bg-destructive/5">
+        <Card className="ring-destructive/40 bg-destructive/5">
           <CardHeader>
             <CardTitle className="text-base text-destructive">
               Cette activité attend votre décision

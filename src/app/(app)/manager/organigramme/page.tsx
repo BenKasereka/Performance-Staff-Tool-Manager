@@ -52,7 +52,7 @@ export default async function PageOrganigramme() {
       </div>
 
       {sansRattachement.length > 0 && (
-        <Card className="border-warning/40 bg-warning/5">
+        <Card className="ring-warning/40 bg-warning/5">
           <CardHeader>
             <CardTitle className="text-base">
               {sansRattachement.length} personne

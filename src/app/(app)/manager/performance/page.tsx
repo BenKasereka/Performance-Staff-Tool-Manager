@@ -133,7 +133,7 @@ export default async function PagePerformance({
       </div>
 
       {qualiteManquante.length > 0 && (
-        <Card className="border-warning/40 bg-warning/5">
+        <Card className="ring-warning/40 bg-warning/5">
           <CardHeader>
             <CardTitle className="text-base">
               Qualité non évaluée pour {qualiteManquante.length} membre

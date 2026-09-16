@@ -98,7 +98,7 @@ function CarteMission({
     mission.statut === "ACTIVE" && restants >= 0 && restants <= 7;
 
   return (
-    <Card className={enAlerte ? "border-destructive/50" : undefined}>
+    <Card className={enAlerte ? "ring-destructive/40 bg-destructive/5" : undefined}>
       <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">

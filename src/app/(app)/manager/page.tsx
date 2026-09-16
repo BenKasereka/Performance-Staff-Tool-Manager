@@ -1,4 +1,12 @@
 import Link from "next/link";
+import {
+  AlertTriangle,
+  CalendarClock,
+  CircleCheckBig,
+  Clock,
+  ListChecks,
+  Users,
+} from "lucide-react";
 
 import { exigerManager } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
@@ -56,14 +64,30 @@ export default async function PageManager() {
       ? Math.round((termineesSemaine / tachesSemaine.length) * 100)
       : 0;
 
-  const chiffres: { libelle: string; valeur: number; tone: ToneStatTile }[] = [
-    { libelle: "Membres actifs", valeur: nbMembres, tone: "info" },
-    { libelle: "Tâches cette semaine", valeur: tachesSemaine.length, tone: "info" },
-    { libelle: "Terminées", valeur: termineesSemaine, tone: "success" },
+  const chiffres: {
+    libelle: string;
+    valeur: number;
+    tone: ToneStatTile;
+    icon: typeof Users;
+  }[] = [
+    { libelle: "Membres actifs", valeur: nbMembres, tone: "info", icon: Users },
+    {
+      libelle: "Tâches cette semaine",
+      valeur: tachesSemaine.length,
+      tone: "info",
+      icon: ListChecks,
+    },
+    {
+      libelle: "Terminées",
+      valeur: termineesSemaine,
+      tone: "success",
+      icon: CircleCheckBig,
+    },
     {
       libelle: "En retard",
       valeur: enRetard.length,
       tone: enRetard.length > 0 ? "destructive" : "neutral",
+      icon: AlertTriangle,
     },
   ];
 
@@ -83,9 +107,10 @@ export default async function PageManager() {
       </div>
 
       {missionsEnAttente.length > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
+        <Card className="ring-destructive/40 bg-destructive/5">
           <CardHeader>
-            <CardTitle className="text-base text-destructive">
+            <CardTitle className="flex items-center gap-2 text-base text-destructive">
+              <AlertTriangle aria-hidden className="size-4.5" />
               {missionsEnAttente.length} activité
               {missionsEnAttente.length > 1 ? "s" : ""} en attente de votre
               décision
@@ -99,7 +124,7 @@ export default async function PageManager() {
             {missionsEnAttente.map((mission) => (
               <div
                 key={mission.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-background p-3"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-card p-3 ring-1 ring-foreground/10"
               >
                 <div>
                   <p className="font-medium">{mission.nom}</p>
@@ -118,9 +143,12 @@ export default async function PageManager() {
       )}
 
       {missionsProches.length > 0 && (
-        <Card className="border-warning/40 bg-warning/5">
+        <Card className="ring-warning/40 bg-warning/5">
           <CardHeader>
-            <CardTitle className="text-base">Activités bientôt échues</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base text-warning">
+              <Clock aria-hidden className="size-4.5" />
+              Activités bientôt échues
+            </CardTitle>
             <CardDescription>
               Préparez votre décision avant la date de fin.
             </CardDescription>
@@ -131,7 +159,7 @@ export default async function PageManager() {
               return (
                 <div
                   key={mission.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-background p-3"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-card p-3 ring-1 ring-foreground/10"
                 >
                   <div>
                     <p className="font-medium">{mission.nom}</p>
@@ -153,14 +181,23 @@ export default async function PageManager() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {chiffres.map((c) => (
-          <StatTile key={c.libelle} libelle={c.libelle} valeur={c.valeur} tone={c.tone} />
+          <StatTile
+            key={c.libelle}
+            libelle={c.libelle}
+            valeur={c.valeur}
+            tone={c.tone}
+            icon={c.icon}
+          />
         ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="ring-info/30 bg-info/5">
           <CardHeader>
-            <CardTitle className="text-base">Aujourd&apos;hui</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base text-info">
+              <CalendarClock aria-hidden className="size-4.5" />
+              Aujourd&apos;hui
+            </CardTitle>
             <CardDescription>
               {tachesJour.length} tâche{tachesJour.length > 1 ? "s" : ""} à
               échéance
@@ -198,9 +235,12 @@ export default async function PageManager() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="ring-destructive/30 bg-destructive/5">
           <CardHeader>
-            <CardTitle className="text-base">Tâches en retard</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base text-destructive">
+              <AlertTriangle aria-hidden className="size-4.5" />
+              Tâches en retard
+            </CardTitle>
             <CardDescription>
               Échéance dépassée, tâche non terminée
             </CardDescription>

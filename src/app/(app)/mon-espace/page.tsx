@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { subWeeks } from "date-fns";
+import {
+  AlertTriangle,
+  CalendarCheck,
+  ListChecks,
+  TrendingUp,
+} from "lucide-react";
 
 import { exigerUtilisateur } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
@@ -69,17 +75,33 @@ export default async function PageMonEspace() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile libelle="Tâches aujourd'hui" valeur={tachesJour.length} tone="info" />
-        <StatTile libelle="Cette semaine" valeur={tachesSemaine.length} tone="info" />
+        <StatTile
+          libelle="Tâches aujourd'hui"
+          valeur={tachesJour.length}
+          tone="info"
+          icon={CalendarCheck}
+        />
+        <StatTile
+          libelle="Cette semaine"
+          valeur={tachesSemaine.length}
+          tone="info"
+          icon={ListChecks}
+        />
         <StatTile
           libelle="En retard"
           valeur={enRetard.length}
           tone={enRetard.length > 0 ? "destructive" : "neutral"}
+          icon={AlertTriangle}
         />
-        <StatTile libelle="Activités en cours" valeur={nbMissions} tone="neutral" />
+        <StatTile
+          libelle="Activités en cours"
+          valeur={nbMissions}
+          tone="neutral"
+          icon={TrendingUp}
+        />
       </div>
 
-      <Card>
+      <Card className="ring-info/30 bg-info/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Ma progression</CardTitle>
           <CardDescription>
@@ -99,7 +121,7 @@ export default async function PageMonEspace() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="ring-success/30 bg-success/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Mon avancement de la semaine</CardTitle>
           <CardDescription>
@@ -113,7 +135,7 @@ export default async function PageMonEspace() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="ring-primary/25 bg-primary/5">
         <CardHeader>
           <CardTitle className="text-base">Mes tâches du jour</CardTitle>
           <CardDescription>
@@ -149,7 +171,7 @@ export default async function PageMonEspace() {
       </Card>
 
       {enRetard.length > 0 && (
-        <Card className="border-destructive/50">
+        <Card className="ring-destructive/40 bg-destructive/5">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-destructive">
               À rattraper
