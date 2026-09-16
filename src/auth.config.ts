@@ -10,6 +10,10 @@ export const authConfig = {
   // alias, previews...). Vercel gère déjà le TLS et les en-têtes
   // X-Forwarded-*, donc faire confiance à l'hôte transmis est sûr ici.
   trustHost: true,
+  // Référence explicite nécessaire : dans le bundle Edge (proxy.ts), Next.js
+  // n'inline que les variables d'environnement qu'il voit statiquement dans
+  // le code de l'application — la lecture interne d'Auth.js ne suffit pas.
+  secret: process.env.AUTH_SECRET,
   pages: {
     signIn: "/connexion",
   },
