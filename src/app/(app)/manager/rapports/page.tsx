@@ -86,7 +86,8 @@ export default async function PageRapports() {
         <CardContent>
           <RapportActivite
             activites={activites}
-            construireBase={(id) => `/api/rapports/mission/${id}`}
+            basePath="/api/rapports/mission"
+            mode="path"
             libelle="Rapport"
           />
         </CardContent>
@@ -104,9 +105,8 @@ export default async function PageRapports() {
           <RapportActivite
             activites={activitesEnCours}
             avecOptionToutes
-            construireBase={(id) =>
-              `/api/rapports/raci${id ? `?mission=${id}` : ""}`
-            }
+            basePath="/api/rapports/raci"
+            mode="query"
             libelle="RACI"
           />
         </CardContent>

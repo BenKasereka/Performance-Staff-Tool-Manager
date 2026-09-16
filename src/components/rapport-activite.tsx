@@ -13,14 +13,27 @@ import {
 
 const TOUTES = "__TOUTES__";
 
+function construireBase(
+  basePath: string,
+  mode: "path" | "query",
+  activiteId?: string,
+) {
+  if (mode === "path") return `${basePath}/${activiteId}`;
+  return `${basePath}${activiteId ? `?mission=${activiteId}` : ""}`;
+}
+
 export function RapportActivite({
   activites,
-  construireBase,
+  basePath,
+  mode,
   libelle,
   avecOptionToutes = false,
 }: {
   activites: { id: string; nom: string }[];
-  construireBase: (activiteId?: string) => string;
+  /** Chemin de base de l'API, sans le paramètre d'activité (ex. "/api/rapports/mission"). */
+  basePath: string;
+  /** "path" ajoute `/${id}` ; "query" ajoute `?mission=${id}` (omis si aucune activité choisie). */
+  mode: "path" | "query";
   libelle: string;
   avecOptionToutes?: boolean;
 }) {
@@ -52,7 +65,7 @@ export function RapportActivite({
 
       {activiteId ? (
         <BoutonsRapport
-          base={construireBase(activiteId === TOUTES ? undefined : activiteId)}
+          base={construireBase(basePath, mode, activiteId === TOUTES ? undefined : activiteId)}
           libelle={libelle}
         />
       ) : (
