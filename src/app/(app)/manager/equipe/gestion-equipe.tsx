@@ -7,7 +7,7 @@ import type { Role } from "@prisma/client";
 import {
   basculerActivation,
   creerMembre,
-  definirRattachement,
+  modifierMembre,
   reinitialiserMotDePasse,
 } from "@/lib/actions/equipe";
 import { useFormulaireAction } from "@/lib/use-formulaire-action";
@@ -112,7 +112,7 @@ export function GestionEquipe({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <DialogueRattachement membre={membre} membres={membres} />
+                  <DialogueProfil membre={membre} membres={membres} />
                   <DialogueMotDePasse membre={membre} />
                   {membre.id !== managerId && (
                     <Button
@@ -134,7 +134,7 @@ export function GestionEquipe({
   );
 }
 
-function DialogueRattachement({
+function DialogueProfil({
   membre,
   membres,
 }: {
@@ -143,7 +143,7 @@ function DialogueRattachement({
 }) {
   const [ouvert, setOuvert] = useState(false);
   const { erreur, enAttente, soumettre } = useFormulaireAction(
-    definirRattachement,
+    modifierMembre,
     () => setOuvert(false),
   );
 
@@ -155,17 +155,28 @@ function DialogueRattachement({
     <Dialog open={ouvert} onOpenChange={setOuvert}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
-          Rattachement
+          Modifier
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Position dans l&apos;organigramme</DialogTitle>
+          <DialogTitle>Modifier le profil</DialogTitle>
           <DialogDescription>{membre.nom}</DialogDescription>
         </DialogHeader>
 
         <form action={soumettre} className="space-y-4">
           <input type="hidden" name="userId" value={membre.id} />
+
+          <div className="space-y-2">
+            <Label htmlFor={`nom-${membre.id}`}>Nom complet</Label>
+            <Input
+              id={`nom-${membre.id}`}
+              name="nom"
+              defaultValue={membre.nom}
+              required
+              minLength={2}
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor={`sup-${membre.id}`}>Supérieur hiérarchique</Label>

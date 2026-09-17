@@ -109,16 +109,21 @@ export async function basculerActivation(userId: string): Promise<Resultat> {
   };
 }
 
-export async function definirRattachement(
+export async function modifierMembre(
   _etat: Resultat,
   donnees: FormData,
 ): Promise<Resultat> {
   await exigerManager();
 
   const userId = String(donnees.get("userId") ?? "");
+  const nom = String(donnees.get("nom") ?? "").trim();
   const superieurId = String(donnees.get("superieurId") ?? "") || null;
   const service = String(donnees.get("service") ?? "").trim() || null;
   const poste = String(donnees.get("poste") ?? "").trim() || null;
+
+  if (nom.length < 2) {
+    return { erreur: "Le nom doit contenir au moins 2 caractères." };
+  }
 
   const membre = await prisma.user.findUnique({ where: { id: userId } });
   if (!membre) return { erreur: "Compte introuvable." };
@@ -136,12 +141,14 @@ export async function definirRattachement(
 
   await prisma.user.update({
     where: { id: userId },
-    data: { superieurId, service, poste },
+    data: { nom, superieurId, service, poste },
   });
 
   revalidatePath("/manager/equipe");
   revalidatePath("/manager/organigramme");
-  return { succes: `Rattachement de ${membre.nom} mis à jour.` };
+  revalidatePath("/manager");
+  revalidatePath("/mon-espace");
+  return { succes: `Profil de ${nom} mis à jour.` };
 }
 
 /**
