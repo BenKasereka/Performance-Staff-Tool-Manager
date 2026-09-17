@@ -13,6 +13,7 @@ import { chargerTaches, chargerTachesDuJour } from "@/lib/donnees";
 import { formaterDate, formaterDateCourte, intervalle } from "@/lib/dates";
 import { BadgeStatutTache } from "@/components/badges";
 import { CourbeEvolution } from "@/components/graphiques/courbe-evolution";
+import { PageHero } from "@/components/page-hero";
 import { StatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,12 +68,10 @@ export default async function PageMonEspace() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Mon espace</h1>
-        <p className="text-sm text-muted-foreground">
-          Bonjour {utilisateur.nom}, voici votre semaine.
-        </p>
-      </div>
+      <PageHero
+        titre="Mon espace"
+        description={`Bonjour ${utilisateur.nom}, voici votre semaine.`}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile

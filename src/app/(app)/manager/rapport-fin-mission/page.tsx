@@ -6,6 +6,7 @@ import { construireRapportMandat } from "@/lib/rapports/donnees";
 import { validerOrdreSections } from "@/lib/rapports/sections-mandat";
 import { formaterDate, versValeurInput } from "@/lib/dates";
 import { BoutonsRapport } from "@/components/boutons-rapport";
+import { PageHero } from "@/components/page-hero";
 import { SelecteurPeriodeMandat } from "@/components/selecteur-periode-mandat";
 import { FormulaireRapportMandat } from "@/components/formulaire-rapport-mandat";
 import { StatTile } from "@/components/stat-tile";
@@ -43,22 +44,16 @@ export default async function PageRapportFinMission({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Rapport de fin de mission
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Couvre tout votre mandat sur la période choisie : toutes vos
-            activités et celles de votre équipe, pas une seule activité
-            isolée.
-          </p>
-        </div>
-        <BoutonsRapport
-          base={`/api/rapports/mandat?${query}`}
-          libelle="Rapport de fin de mission"
-        />
-      </div>
+      <PageHero
+        titre="Rapport de fin de mission"
+        description="Couvre tout votre mandat sur la période choisie : toutes vos activités et celles de votre équipe, pas une seule activité isolée."
+        actions={
+          <BoutonsRapport
+            base={`/api/rapports/mandat?${query}`}
+            libelle="Rapport de fin de mission"
+          />
+        }
+      />
 
       <Card>
         <CardHeader className="pb-3">

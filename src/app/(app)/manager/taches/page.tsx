@@ -13,6 +13,7 @@ import { estEnRetard, statutAffiche } from "@/lib/taches";
 import { DialogueTache } from "@/components/dialogue-tache";
 import { FiltresTaches } from "@/components/filtres-taches";
 import { ListeTaches } from "@/components/liste-taches";
+import { PageHero } from "@/components/page-hero";
 import { PlanningCalendrier } from "@/components/planning-calendrier";
 import { SelecteurPeriode } from "@/components/selecteur-periode";
 import { Button } from "@/components/ui/button";
@@ -79,21 +80,18 @@ export default async function PageTaches({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Tâches</h1>
-          <p className="text-sm text-muted-foreground">
-            {taches.length} tâche{taches.length > 1 ? "s" : ""} sur la période ·{" "}
-            {terminees} terminée{terminees > 1 ? "s" : ""} · {enRetard} en retard
-          </p>
-        </div>
-        <DialogueTache
-          membres={membres}
-          missions={missions}
-          utilisateur={{ id: utilisateur.id, role: utilisateur.role }}
-          declencheur={<Button>Nouvelle tâche</Button>}
-        />
-      </div>
+      <PageHero
+        titre="Tâches"
+        description={`${taches.length} tâche${taches.length > 1 ? "s" : ""} sur la période · ${terminees} terminée${terminees > 1 ? "s" : ""} · ${enRetard} en retard`}
+        actions={
+          <DialogueTache
+            membres={membres}
+            missions={missions}
+            utilisateur={{ id: utilisateur.id, role: utilisateur.role }}
+            declencheur={<Button>Nouvelle tâche</Button>}
+          />
+        }
+      />
 
       <div className="space-y-3">
         <SelecteurPeriode granularite={granularite} reference={reference} />

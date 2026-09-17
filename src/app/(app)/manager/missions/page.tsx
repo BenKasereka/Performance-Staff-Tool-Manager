@@ -8,6 +8,7 @@ import { formaterDate, joursRestants } from "@/lib/dates";
 import { LIBELLES_TYPE_MISSION } from "@/lib/missions";
 import { BadgeStatutMission } from "@/components/badges";
 import { DialogueMission } from "@/components/dialogue-mission";
+import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -33,18 +34,16 @@ export default async function PageMissions() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Activités</h1>
-          <p className="text-sm text-muted-foreground">
-            Projets ponctuels et cycles de suivi récurrents.
-          </p>
-        </div>
-        <DialogueMission
-          membres={membres}
-          declencheur={<Button>Nouvelle activité</Button>}
-        />
-      </div>
+      <PageHero
+        titre="Activités"
+        description="Projets ponctuels et cycles de suivi récurrents."
+        actions={
+          <DialogueMission
+            membres={membres}
+            declencheur={<Button>Nouvelle activité</Button>}
+          />
+        }
+      />
 
       {enAttente.length > 0 && (
         <section className="space-y-2">
@@ -98,7 +97,13 @@ function CarteMission({
     mission.statut === "ACTIVE" && restants >= 0 && restants <= 7;
 
   return (
-    <Card className={enAlerte ? "ring-destructive/40 bg-destructive/5" : undefined}>
+    <Card
+      className={
+        enAlerte
+          ? "border-l-4 border-l-destructive ring-destructive/30 bg-destructive/[0.06]"
+          : undefined
+      }
+    >
       <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -123,7 +128,7 @@ function CarteMission({
           </p>
 
           {afficherCompteARebours && (
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+            <p className="text-xs font-medium text-warning">
               {restants === 0
                 ? "Se termine aujourd'hui"
                 : `Se termine dans ${restants} jour${restants > 1 ? "s" : ""}`}

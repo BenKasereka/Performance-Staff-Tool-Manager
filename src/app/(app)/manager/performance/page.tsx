@@ -19,6 +19,7 @@ import {
 } from "@/components/graphiques/repartition-statuts";
 import { SelecteurPeriode } from "@/components/selecteur-periode";
 import { FiltreActivite } from "@/components/filtre-activite";
+import { PageHero } from "@/components/page-hero";
 import { StatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,13 +93,10 @@ export default async function PagePerformance({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Performance</h1>
-        <p className="text-sm text-muted-foreground">
-          Classement confidentiel — visible par les managers uniquement, jamais
-          par les membres.
-        </p>
-      </div>
+      <PageHero
+        titre="Performance"
+        description="Classement confidentiel — visible par les managers uniquement, jamais par les membres."
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <SelecteurPeriode granularite={granularite} reference={reference} />
@@ -133,7 +131,7 @@ export default async function PagePerformance({
       </div>
 
       {qualiteManquante.length > 0 && (
-        <Card className="ring-warning/40 bg-warning/5">
+        <Card className="border-l-4 border-l-warning ring-warning/30 bg-warning/[0.06]">
           <CardHeader>
             <CardTitle className="text-base">
               Qualité non évaluée pour {qualiteManquante.length} membre

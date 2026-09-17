@@ -20,6 +20,7 @@ import { DialogueTache } from "@/components/dialogue-tache";
 import { ListeTaches } from "@/components/liste-taches";
 import { ActionsMission } from "./actions-mission";
 import { BilanQualitatif } from "./bilan-qualitatif";
+import { PageHero } from "@/components/page-hero";
 import { StatTile, type ToneStatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,72 +80,70 @@ export default async function PageMission({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <Link
-            href="/manager/missions"
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            ← Activités
-          </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {mission.nom}
-            </h1>
+      <PageHero
+        retour={{ href: "/manager/missions", libelle: "Activités" }}
+        titre={
+          <span className="flex flex-wrap items-center gap-2">
+            {mission.nom}
             <BadgeStatutMission statut={mission.statut} />
-          </div>
-          <p className="text-sm text-muted-foreground">
+          </span>
+        }
+        description={
+          <>
             {LIBELLES_TYPE_MISSION[mission.type]} ·{" "}
             {formaterDate(mission.dateDebut)} →{" "}
             {formaterDate(mission.dateFinActuelle)}
             {mission.dateCloture &&
               ` · clôturée le ${formaterDate(mission.dateCloture)}`}
-          </p>
-          {mission.description && (
-            <p className="max-w-2xl text-sm">{mission.description}</p>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {missionModifiable(mission.statut) && (
-            <DialogueMission
-              membres={membres}
-              mission={{
-                id: mission.id,
-                nom: mission.nom,
-                description: mission.description,
-                type: mission.type,
-                dateDebut: mission.dateDebut,
-                dateFinActuelle: mission.dateFinActuelle,
-                membres: mission.membres.map((m) => m.userId),
-              }}
-              declencheur={
-                <Button variant="outline" size="sm">
-                  Modifier
-                </Button>
-              }
+            {mission.description && (
+              <span className="mt-1 block max-w-2xl text-foreground/90">
+                {mission.description}
+              </span>
+            )}
+          </>
+        }
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {missionModifiable(mission.statut) && (
+              <DialogueMission
+                membres={membres}
+                mission={{
+                  id: mission.id,
+                  nom: mission.nom,
+                  description: mission.description,
+                  type: mission.type,
+                  dateDebut: mission.dateDebut,
+                  dateFinActuelle: mission.dateFinActuelle,
+                  membres: mission.membres.map((m) => m.userId),
+                }}
+                declencheur={
+                  <Button variant="outline" size="sm">
+                    Modifier
+                  </Button>
+                }
+              />
+            )}
+            <ActionsMission
+              missionId={mission.id}
+              statut={mission.statut}
+              echeanceActuelle={mission.dateFinActuelle}
             />
-          )}
-          <ActionsMission
-            missionId={mission.id}
-            statut={mission.statut}
-            echeanceActuelle={mission.dateFinActuelle}
-          />
-          {(mission.statut === "CLOTUREE" || mission.statut === "ARCHIVEE") && (
+            {(mission.statut === "CLOTUREE" || mission.statut === "ARCHIVEE") && (
+              <BoutonsRapport
+                base={`/api/rapports/mission/${mission.id}`}
+                libelle="Rapport de clôture d'activité"
+              />
+            )}
             <BoutonsRapport
-              base={`/api/rapports/mission/${mission.id}`}
-              libelle="Rapport de clôture d'activité"
+              base={`/api/rapports/raci?mission=${mission.id}`}
+              libelle="RACI de passation"
             />
-          )}
-          <BoutonsRapport
-            base={`/api/rapports/raci?mission=${mission.id}`}
-            libelle="RACI de passation"
-          />
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {mission.statut === "EN_ATTENTE_DECISION" && (
-        <Card className="ring-destructive/40 bg-destructive/5">
+        <Card className="border-l-4 border-l-destructive ring-destructive/30 bg-destructive/[0.06]">
           <CardHeader>
             <CardTitle className="text-base text-destructive">
               Cette activité attend votre décision
@@ -162,7 +161,7 @@ export default async function PageMission({
       {mission.statut === "ACTIVE" &&
         restants >= 0 &&
         restants <= JOURS_ALERTE_FIN_MISSION && (
-          <Card className="border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+          <Card className="border-l-4 border-l-warning ring-warning/30 bg-warning/[0.06]">
             <CardHeader>
               <CardTitle className="text-base">
                 Fin d&apos;activité proche

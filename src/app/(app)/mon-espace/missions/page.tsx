@@ -4,6 +4,7 @@ import { formaterDate } from "@/lib/dates";
 import { LIBELLES_TYPE_MISSION } from "@/lib/missions";
 import { estEnRetard } from "@/lib/taches";
 import { BadgeStatutMission } from "@/components/badges";
+import { PageHero } from "@/components/page-hero";
 import {
   Card,
   CardContent,
@@ -33,7 +34,7 @@ export default async function PageMesMissions() {
   if (missions.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Mes activités</h1>
+        <PageHero titre="Mes activités" />
         <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
           Vous n&apos;êtes assigné à aucune activité pour l&apos;instant.
         </p>
@@ -43,12 +44,10 @@ export default async function PageMesMissions() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Mes activités</h1>
-        <p className="text-sm text-muted-foreground">
-          Votre avancement personnel sur chaque activité.
-        </p>
-      </div>
+      <PageHero
+        titre="Mes activités"
+        description="Votre avancement personnel sur chaque activité."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {missions.map((mission) => {

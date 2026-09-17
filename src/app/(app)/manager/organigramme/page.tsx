@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { exigerManager } from "@/lib/auth-guards";
 import { construireOrganigramme, type NoeudOrganigramme } from "@/lib/organigramme";
+import { PageHero } from "@/components/page-hero";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,23 +37,18 @@ export default async function PageOrganigramme() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Organigramme
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Qui fait quoi, qui supervise qui, et combien de tâches relèvent de
-            chacun.
-          </p>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href="/manager/equipe">Modifier les rattachements</Link>
-        </Button>
-      </div>
+      <PageHero
+        titre="Organigramme"
+        description="Qui fait quoi, qui supervise qui, et combien de tâches relèvent de chacun."
+        actions={
+          <Button variant="outline" asChild>
+            <Link href="/manager/equipe">Modifier les rattachements</Link>
+          </Button>
+        }
+      />
 
       {sansRattachement.length > 0 && (
-        <Card className="ring-warning/40 bg-warning/5">
+        <Card className="border-l-4 border-l-warning ring-warning/30 bg-warning/[0.06]">
           <CardHeader>
             <CardTitle className="text-base">
               {sansRattachement.length} personne

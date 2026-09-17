@@ -140,7 +140,7 @@ export function ListeTaches({
                 </p>
 
                 {report > 0 && (
-                  <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                  <p className="text-xs font-medium text-warning">
                     Reportée depuis le {formaterDate(tache.echeance)} —{" "}
                     {report} jour{report > 1 ? "s" : ""}
                   </p>

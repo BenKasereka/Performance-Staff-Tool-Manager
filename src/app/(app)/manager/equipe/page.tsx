@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { exigerManager } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { GestionEquipe } from "./gestion-equipe";
 
@@ -28,17 +29,15 @@ export default async function PageEquipe() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Équipe</h1>
-          <p className="text-sm text-muted-foreground">
-            Comptes, rattachements hiérarchiques et services.
-          </p>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href="/manager/organigramme">Voir l&apos;organigramme</Link>
-        </Button>
-      </div>
+      <PageHero
+        titre="Équipe"
+        description="Comptes, rattachements hiérarchiques et services."
+        actions={
+          <Button variant="outline" asChild>
+            <Link href="/manager/organigramme">Voir l&apos;organigramme</Link>
+          </Button>
+        }
+      />
 
       <GestionEquipe membres={membres} managerId={manager.id} />
     </div>

@@ -11,6 +11,7 @@ import { estEnRetard, livreeEnRetard } from "@/lib/taches";
 import { BadgeStatutTache } from "@/components/badges";
 import { BoutonsRapport } from "@/components/boutons-rapport";
 import { CourbeEvolution } from "@/components/graphiques/courbe-evolution";
+import { PageHero } from "@/components/page-hero";
 import { StatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,20 +100,17 @@ export default async function PageMembrePerformance({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <Link
-          href="/manager/performance"
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          ← Classement
-        </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">{membre.nom}</h1>
-        <p className="text-sm text-muted-foreground">
-          {[membre.poste, membre.service].filter(Boolean).join(" · ") ||
-            "Poste non renseigné"}
-          {membre.superieur && ` · rattaché à ${membre.superieur.nom}`}
-        </p>
-      </div>
+      <PageHero
+        retour={{ href: "/manager/performance", libelle: "Classement" }}
+        titre={membre.nom}
+        description={
+          <>
+            {[membre.poste, membre.service].filter(Boolean).join(" · ") ||
+              "Poste non renseigné"}
+            {membre.superieur && ` · rattaché à ${membre.superieur.nom}`}
+          </>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatTile

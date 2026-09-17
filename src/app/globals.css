@@ -76,7 +76,7 @@
   --success-foreground: #ffffff;
   --warning: #b45309;
   --warning-foreground: #ffffff;
-  --info: #0e7c86;
+  --info: #1d63b3;
   --info-foreground: #ffffff;
   --header: #10203f;
   --header-foreground: #ffffff;
@@ -84,7 +84,7 @@
   --input: #e2e5e2;
   --ring: #1f6b48;
   --chart-1: #1f6b48;
-  --chart-2: #0e7c86;
+  --chart-2: #1d63b3;
   --chart-3: #1c9a5b;
   --chart-4: #ac2740;
   --chart-5: #5b6660;
@@ -122,7 +122,7 @@
   --success-foreground: #06140f;
   --warning: #f5a742;
   --warning-foreground: #241705;
-  --info: #3fb6c2;
+  --info: #5b93e0;
   --info-foreground: #04191c;
   --header: #0a1730;
   --header-foreground: #ffffff;
@@ -130,7 +130,7 @@
   --input: oklch(1 0 0 / 15%);
   --ring: #4fd18b;
   --chart-1: #4fd18b;
-  --chart-2: #3fb6c2;
+  --chart-2: #5b93e0;
   --chart-3: #5cd6a6;
   --chart-4: #e8798a;
   --chart-5: #a3a39d;

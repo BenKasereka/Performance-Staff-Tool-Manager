@@ -15,6 +15,7 @@ import {
   BadgeStatutTache,
 } from "@/components/badges";
 import { FilCommentaires } from "@/components/fil-commentaires";
+import { PageHero } from "@/components/page-hero";
 import {
   Card,
   CardContent,
@@ -79,25 +80,18 @@ export async function DetailTache({ tacheId, utilisateur, retour }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Link
-          href={retour}
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          ← Retour aux tâches
-        </Link>
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">
+      <PageHero
+        retour={{ href: retour, libelle: "Retour aux tâches" }}
+        titre={
+          <span className="flex flex-wrap items-center gap-2">
             {tache.titre}
-          </h1>
-          <BadgeStatutTache statut={statutAffiche(tache)} />
-          <BadgePriorite priorite={tache.priorite} />
-          {estManager && <BadgeOrigine origine={tache.origine} />}
-        </div>
-        {tache.description && (
-          <p className="max-w-2xl text-sm">{tache.description}</p>
-        )}
-      </div>
+            <BadgeStatutTache statut={statutAffiche(tache)} />
+            <BadgePriorite priorite={tache.priorite} />
+            {estManager && <BadgeOrigine origine={tache.origine} />}
+          </span>
+        }
+        description={tache.description}
+      />
 
       <Card>
         <CardHeader className="pb-3">
@@ -110,7 +104,7 @@ export async function DetailTache({ tacheId, utilisateur, retour }: Props) {
               <dd>
                 {formaterDate(tache.echeance)}
                 {report > 0 && (
-                  <span className="block text-xs font-medium text-amber-700 dark:text-amber-400">
+                  <span className="block text-xs font-medium text-warning">
                     Reportée {report} jour{report > 1 ? "s" : ""} — elle reste
                     au planning du jour jusqu&apos;à sa clôture
                   </span>
