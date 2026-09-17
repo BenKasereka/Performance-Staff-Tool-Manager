@@ -103,7 +103,7 @@ export default async function PageManager() {
       />
 
       {missionsEnAttente.length > 0 && (
-        <Card className="ring-destructive/40 bg-destructive/5">
+        <Card className="border-l-4 border-l-destructive ring-destructive/30 bg-destructive/[0.06]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base text-destructive">
               <AlertTriangle aria-hidden className="size-4.5" />
@@ -139,7 +139,7 @@ export default async function PageManager() {
       )}
 
       {missionsProches.length > 0 && (
-        <Card className="ring-warning/40 bg-warning/5">
+        <Card className="border-l-4 border-l-warning ring-warning/30 bg-warning/[0.06]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base text-warning">
               <Clock aria-hidden className="size-4.5" />
@@ -188,7 +188,7 @@ export default async function PageManager() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="ring-info/30 bg-info/5">
+        <Card className="border-l-4 border-l-info ring-info/25 bg-info/[0.05]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base text-info">
               <CalendarClock aria-hidden className="size-4.5" />
@@ -231,7 +231,7 @@ export default async function PageManager() {
           </CardContent>
         </Card>
 
-        <Card className="ring-destructive/30 bg-destructive/5">
+        <Card className="border-l-4 border-l-destructive ring-destructive/25 bg-destructive/[0.05]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base text-destructive">
               <AlertTriangle aria-hidden className="size-4.5" />

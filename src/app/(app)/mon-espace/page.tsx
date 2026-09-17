@@ -101,7 +101,7 @@ export default async function PageMonEspace() {
         />
       </div>
 
-      <Card className="ring-info/30 bg-info/5">
+      <Card className="border-l-4 border-l-info ring-info/25 bg-info/[0.05]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Ma progression</CardTitle>
           <CardDescription>
@@ -121,7 +121,7 @@ export default async function PageMonEspace() {
         </CardContent>
       </Card>
 
-      <Card className="ring-success/30 bg-success/5">
+      <Card className="border-l-4 border-l-success ring-success/25 bg-success/[0.05]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Mon avancement de la semaine</CardTitle>
           <CardDescription>
@@ -135,7 +135,7 @@ export default async function PageMonEspace() {
         </CardContent>
       </Card>
 
-      <Card className="ring-primary/25 bg-primary/5">
+      <Card className="border-l-4 border-l-primary ring-primary/20 bg-primary/[0.04]">
         <CardHeader>
           <CardTitle className="text-base">Mes tâches du jour</CardTitle>
           <CardDescription>
@@ -171,7 +171,7 @@ export default async function PageMonEspace() {
       </Card>
 
       {enRetard.length > 0 && (
-        <Card className="ring-destructive/40 bg-destructive/5">
+        <Card className="border-l-4 border-l-destructive ring-destructive/30 bg-destructive/[0.06]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-destructive">
               À rattraper

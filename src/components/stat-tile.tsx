@@ -12,15 +12,16 @@ import {
 export type ToneStatTile = "neutral" | "info" | "success" | "warning" | "destructive";
 
 // Le Card de base délimite ses bords avec `ring-1 ring-foreground/15` (pas de
-// classe `border`) : c'est donc la couleur du ring qu'il faut surcharger ici
-// pour qu'une teinte soit réellement visible, pas `border-*/*` qui n'a aucun
-// effet sans largeur de bordure.
+// classe `border`), donc une bordure gauche épaisse peut se rajouter sans
+// conflit — c'est ce liseré + la puce en couleur pleine qui rendent la teinte
+// vraiment visible plutôt qu'un simple lavis à peine perceptible.
 const FOND: Record<ToneStatTile, string> = {
   neutral: "",
-  info: "ring-info/35 bg-info/10",
-  success: "ring-success/35 bg-success/10",
-  warning: "ring-warning/35 bg-warning/10",
-  destructive: "ring-destructive/35 bg-destructive/10",
+  info: "border-l-4 border-l-info ring-info/30 bg-info/[0.07]",
+  success: "border-l-4 border-l-success ring-success/30 bg-success/[0.07]",
+  warning: "border-l-4 border-l-warning ring-warning/30 bg-warning/[0.07]",
+  destructive:
+    "border-l-4 border-l-destructive ring-destructive/30 bg-destructive/[0.07]",
 };
 
 const TEXTE: Record<ToneStatTile, string> = {
@@ -33,10 +34,10 @@ const TEXTE: Record<ToneStatTile, string> = {
 
 const PUCE: Record<ToneStatTile, string> = {
   neutral: "bg-muted text-muted-foreground",
-  info: "bg-info/15 text-info",
-  success: "bg-success/15 text-success",
-  warning: "bg-warning/15 text-warning",
-  destructive: "bg-destructive/15 text-destructive",
+  info: "bg-info text-info-foreground",
+  success: "bg-success text-success-foreground",
+  warning: "bg-warning text-warning-foreground",
+  destructive: "bg-destructive text-destructive-foreground",
 };
 
 export function StatTile({

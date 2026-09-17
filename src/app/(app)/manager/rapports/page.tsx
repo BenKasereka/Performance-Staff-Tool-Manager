@@ -16,8 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const PUCE =
-  "inline-flex size-9 items-center justify-center rounded-full";
+const PUCE = "inline-flex size-9 items-center justify-center rounded-full";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +50,7 @@ export default async function PageRapports() {
         </p>
       </div>
 
-      <Card className="ring-primary/35 bg-primary/5">
+      <Card className="border-l-4 border-l-primary ring-primary/30 bg-primary/[0.06]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Rapport de fin de mission</CardTitle>
           <CardDescription>
@@ -59,7 +58,10 @@ export default async function PageRapports() {
             celles de votre équipe.
           </CardDescription>
           <CardAction>
-            <span aria-hidden className={cn(PUCE, "bg-primary/15 text-primary")}>
+            <span
+              aria-hidden
+              className={cn(PUCE, "bg-primary text-primary-foreground")}
+            >
               <FileText className="size-4.5" />
             </span>
           </CardAction>
@@ -73,7 +75,7 @@ export default async function PageRapports() {
         </CardContent>
       </Card>
 
-      <Card className="ring-info/35 bg-info/5">
+      <Card className="border-l-4 border-l-info ring-info/30 bg-info/[0.06]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Bilans individuels</CardTitle>
           <CardDescription>
@@ -81,7 +83,7 @@ export default async function PageRapports() {
             et la fréquence du bilan (journalier à annuel).
           </CardDescription>
           <CardAction>
-            <span aria-hidden className={cn(PUCE, "bg-info/15 text-info")}>
+            <span aria-hidden className={cn(PUCE, "bg-info text-info-foreground")}>
               <Users className="size-4.5" />
             </span>
           </CardAction>
@@ -91,7 +93,7 @@ export default async function PageRapports() {
         </CardContent>
       </Card>
 
-      <Card className="ring-success/35 bg-success/5">
+      <Card className="border-l-4 border-l-success ring-success/30 bg-success/[0.06]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Clôture d&apos;activité</CardTitle>
           <CardDescription>
@@ -99,7 +101,10 @@ export default async function PageRapports() {
             récurrent donné.
           </CardDescription>
           <CardAction>
-            <span aria-hidden className={cn(PUCE, "bg-success/15 text-success")}>
+            <span
+              aria-hidden
+              className={cn(PUCE, "bg-success text-success-foreground")}
+            >
               <ListTree className="size-4.5" />
             </span>
           </CardAction>
@@ -114,7 +119,7 @@ export default async function PageRapports() {
         </CardContent>
       </Card>
 
-      <Card className="ring-warning/35 bg-warning/5">
+      <Card className="border-l-4 border-l-warning ring-warning/30 bg-warning/[0.06]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">RACI de passation</CardTitle>
           <CardDescription>
@@ -122,7 +127,10 @@ export default async function PageRapports() {
             ouvertes — sur une activité précise ou sur l&apos;ensemble.
           </CardDescription>
           <CardAction>
-            <span aria-hidden className={cn(PUCE, "bg-warning/15 text-warning")}>
+            <span
+              aria-hidden
+              className={cn(PUCE, "bg-warning text-warning-foreground")}
+            >
               <Network className="size-4.5" />
             </span>
           </CardAction>
