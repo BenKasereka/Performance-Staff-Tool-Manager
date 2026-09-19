@@ -102,6 +102,36 @@ export async function construireOrganigramme() {
   return { racines, noeuds: [...noeuds.values()] };
 }
 
+/** Un nœud et toute sa descendance hiérarchique (sans lui-même). */
+export function collecterDescendance(noeud: NoeudOrganigramme): string[] {
+  const ids: string[] = [];
+  for (const enfant of noeud.enfants) {
+    ids.push(enfant.id, ...collecterDescendance(enfant));
+  }
+  return ids;
+}
+
+/**
+ * Un manager ne gère que lui-même, sa descendance hiérarchique complète, et
+ * les membres pas encore rattachés à personne (à réclamer dans son équipe).
+ * Un autre manager et l'équipe qui lui est propre restent hors de portée :
+ * chaque manager n'agit que sur sa propre organisation.
+ */
+export async function idsEquipeGeree(managerId: string): Promise<Set<string>> {
+  const { noeuds } = await construireOrganigramme();
+  const managerNoeud = noeuds.find((n) => n.id === managerId);
+
+  const ids = new Set<string>([managerId]);
+  if (managerNoeud) {
+    for (const id of collecterDescendance(managerNoeud)) ids.add(id);
+  }
+  for (const noeud of noeuds) {
+    if (!noeud.superieurId && noeud.role !== "MANAGER") ids.add(noeud.id);
+  }
+
+  return ids;
+}
+
 /** Le point de contact d'une tâche est le N+1 de la personne assignée. */
 export async function pointsDeContact(userIds: string[]) {
   if (userIds.length === 0) return new Map<string, string>();

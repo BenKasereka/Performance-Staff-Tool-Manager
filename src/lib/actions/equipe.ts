@@ -3,12 +3,41 @@
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import type { User } from "@prisma/client";
 
 import { exigerManager } from "@/lib/auth-guards";
 import { envoyerEmail } from "@/lib/email";
+import { idsEquipeGeree } from "@/lib/organigramme";
 import { prisma } from "@/lib/prisma";
 
 export type Resultat = { erreur?: string; succes?: string } | undefined;
+
+/**
+ * Chaque manager n'agit que sur sa propre organisation : lui-même, sa
+ * descendance hiérarchique, et les membres pas encore rattachés à personne.
+ * Un autre manager, et l'équipe qui lui est propre, ne sont jamais une cible
+ * valide — ni pour lecture élargie, ni pour aucune des actions ci-dessous.
+ */
+async function exigerMembreGere(
+  managerId: string,
+  cibleId: string,
+): Promise<{ erreur?: string; membre?: User }> {
+  const cible = await prisma.user.findUnique({ where: { id: cibleId } });
+  if (!cible) return { erreur: "Compte introuvable." };
+
+  if (cible.role === "MANAGER" && cible.id !== managerId) {
+    return {
+      erreur: "Vous ne pouvez pas modifier les informations d'un autre manager.",
+    };
+  }
+
+  const geres = await idsEquipeGeree(managerId);
+  if (!geres.has(cible.id)) {
+    return { erreur: "Ce compte ne fait pas partie de votre équipe." };
+  }
+
+  return { membre: cible };
+}
 
 const schemaMembre = z.object({
   nom: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -26,7 +55,7 @@ export async function creerMembre(
   _etat: Resultat,
   donnees: FormData,
 ): Promise<Resultat> {
-  await exigerManager();
+  const manager = await exigerManager();
 
   const parsed = schemaMembre.safeParse({
     nom: donnees.get("nom"),
@@ -39,6 +68,13 @@ export async function creerMembre(
   });
 
   if (!parsed.success) return { erreur: parsed.error.issues[0].message };
+
+  if (parsed.data.superieurId) {
+    const geres = await idsEquipeGeree(manager.id);
+    if (!geres.has(parsed.data.superieurId)) {
+      return { erreur: "Le supérieur choisi ne fait pas partie de votre équipe." };
+    }
+  }
 
   const email = parsed.data.email.toLowerCase();
   if (await prisma.user.findUnique({ where: { email } })) {
@@ -93,8 +129,11 @@ export async function basculerActivation(userId: string): Promise<Resultat> {
     return { erreur: "Vous ne pouvez pas désactiver votre propre compte." };
   }
 
-  const membre = await prisma.user.findUnique({ where: { id: userId } });
-  if (!membre) return { erreur: "Compte introuvable." };
+  const verification = await exigerMembreGere(manager.id, userId);
+  if (!verification.membre) {
+    return { erreur: verification.erreur ?? "Compte introuvable." };
+  }
+  const membre = verification.membre;
 
   await prisma.user.update({
     where: { id: userId },
@@ -113,7 +152,7 @@ export async function modifierMembre(
   _etat: Resultat,
   donnees: FormData,
 ): Promise<Resultat> {
-  await exigerManager();
+  const manager = await exigerManager();
 
   const userId = String(donnees.get("userId") ?? "");
   const nom = String(donnees.get("nom") ?? "").trim();
@@ -125,11 +164,20 @@ export async function modifierMembre(
     return { erreur: "Le nom doit contenir au moins 2 caractères." };
   }
 
-  const membre = await prisma.user.findUnique({ where: { id: userId } });
-  if (!membre) return { erreur: "Compte introuvable." };
+  const verification = await exigerMembreGere(manager.id, userId);
+  if (!verification.membre) {
+    return { erreur: verification.erreur ?? "Compte introuvable." };
+  }
 
   if (superieurId === userId) {
     return { erreur: "Une personne ne peut pas être son propre supérieur." };
+  }
+
+  if (superieurId) {
+    const geres = await idsEquipeGeree(manager.id);
+    if (!geres.has(superieurId)) {
+      return { erreur: "Le supérieur choisi ne fait pas partie de votre équipe." };
+    }
   }
 
   if (superieurId && (await creeraitUnCycle(userId, superieurId))) {
@@ -178,7 +226,7 @@ export async function reinitialiserMotDePasse(
   _etat: Resultat,
   donnees: FormData,
 ): Promise<Resultat> {
-  await exigerManager();
+  const manager = await exigerManager();
 
   const userId = String(donnees.get("userId") ?? "");
   const motDePasse = String(donnees.get("motDePasse") ?? "");
@@ -187,8 +235,11 @@ export async function reinitialiserMotDePasse(
     return { erreur: "Le mot de passe doit contenir au moins 8 caractères." };
   }
 
-  const membre = await prisma.user.findUnique({ where: { id: userId } });
-  if (!membre) return { erreur: "Compte introuvable." };
+  const verification = await exigerMembreGere(manager.id, userId);
+  if (!verification.membre) {
+    return { erreur: verification.erreur ?? "Compte introuvable." };
+  }
+  const membre = verification.membre;
 
   await prisma.user.update({
     where: { id: userId },

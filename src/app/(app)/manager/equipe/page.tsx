@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { exigerManager } from "@/lib/auth-guards";
+import { idsEquipeGeree } from "@/lib/organigramme";
 import { prisma } from "@/lib/prisma";
 import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,13 @@ export const dynamic = "force-dynamic";
 export default async function PageEquipe() {
   const manager = await exigerManager();
 
+  // Chaque manager ne voit et ne gère que sa propre organisation : lui-même,
+  // sa descendance hiérarchique, et les membres pas encore rattachés à
+  // personne. Un autre manager et son équipe restent hors de cet écran.
+  const geres = await idsEquipeGeree(manager.id);
+
   const membres = await prisma.user.findMany({
+    where: { id: { in: [...geres] } },
     orderBy: [{ role: "asc" }, { nom: "asc" }],
     select: {
       id: true,

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calculerScores, type DetailScore } from "@/lib/kpi";
 import { estEnRetard, livreeEnRetard, LIBELLES_STATUT, statutAffiche } from "@/lib/taches";
 import { formaterDate, intervalle, type Granularite } from "@/lib/dates";
-import { construireOrganigramme, type NoeudOrganigramme } from "@/lib/organigramme";
+import { collecterDescendance, construireOrganigramme } from "@/lib/organigramme";
 import { LIBELLES_STATUT_MISSION, LIBELLES_TYPE_MISSION } from "@/lib/missions";
 import { resoudreOrdreSections, type CleSectionMandat } from "@/lib/rapports/sections-mandat";
 
@@ -362,14 +362,6 @@ async function avancementMission(missionId: string, debut: Date, fin: Date) {
  * période, en agrégeant toutes les activités et tâches de son équipe (sa
  * descendance hiérarchique complète) — pas une seule activité isolée.
  */
-
-function collecterDescendance(noeud: NoeudOrganigramme): string[] {
-  const ids: string[] = [];
-  for (const enfant of noeud.enfants) {
-    ids.push(enfant.id, ...collecterDescendance(enfant));
-  }
-  return ids;
-}
 
 export type RapportMandat = {
   manager: { nom: string; poste: string | null };
