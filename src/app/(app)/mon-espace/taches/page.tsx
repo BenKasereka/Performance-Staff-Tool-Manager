@@ -51,7 +51,8 @@ export default async function PageMesTaches({
       ? chargerTachesDuJour(periode, filtres)
       : chargerTaches({
           ...filtres,
-          echeance: { gte: periode.debut, lte: periode.fin },
+          dateDebut: { lte: periode.fin },
+          echeance: { gte: periode.debut },
         }),
     chargerMissionsOptions(utilisateur.id),
   ]);

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { addDays, addMonths, endOfDay } from "date-fns";
+import { addDays, addMonths, endOfDay, startOfDay } from "date-fns";
 import { z } from "zod";
 import type { RecurrenceFrequence, Task, TaskStatut } from "@prisma/client";
 
@@ -22,6 +22,7 @@ const schemaTache = z.object({
     "MENSUELLE",
     "PONCTUELLE",
   ]),
+  dateDebut: z.coerce.date(),
   echeance: z.coerce.date(),
   priorite: z.enum(["BASSE", "MOYENNE", "HAUTE"]),
   assignes: z.array(z.string()).min(1, "Assignez au moins une personne"),
@@ -40,6 +41,7 @@ function lireFormulaireTache(donnees: FormData) {
       description: donnees.get("description") || undefined,
       missionId: donnees.get("missionId") || undefined,
       periodicite: donnees.get("periodicite") ?? "PONCTUELLE",
+      dateDebut: donnees.get("dateDebut"),
       echeance: donnees.get("echeance"),
       priorite: donnees.get("priorite") ?? "MOYENNE",
       assignes: donnees.getAll("assignes").map(String).filter(Boolean),
@@ -61,6 +63,10 @@ export async function creerTache(
   const utilisateur = await exigerUtilisateur();
   const { recurrenceActive, parsed } = lireFormulaireTache(donnees);
   if (!parsed.success) return { erreur: parsed.error.issues[0].message };
+
+  if (startOfDay(parsed.data.dateDebut) > startOfDay(parsed.data.echeance)) {
+    return { erreur: "La date de début doit précéder ou être égale à l'échéance." };
+  }
 
   const estManager = utilisateur.role === "MANAGER";
   const { assignes } = parsed.data;
@@ -84,6 +90,7 @@ export async function creerTache(
       description: parsed.data.description,
       missionId: mission?.id,
       periodicite: parsed.data.periodicite,
+      dateDebut: startOfDay(parsed.data.dateDebut),
       echeance: endOfDay(parsed.data.echeance),
       priorite: parsed.data.priorite,
       origine: estManager ? "MANAGER" : "MEMBRE",
@@ -134,6 +141,10 @@ export async function modifierTache(
   const { recurrenceActive, parsed } = lireFormulaireTache(donnees);
   if (!parsed.success) return { erreur: parsed.error.issues[0].message };
 
+  if (startOfDay(parsed.data.dateDebut) > startOfDay(parsed.data.echeance)) {
+    return { erreur: "La date de début doit précéder ou être égale à l'échéance." };
+  }
+
   const { assignes } = parsed.data;
   if (!estManager && (assignes.length !== 1 || assignes[0] !== utilisateur.id)) {
     return { erreur: "Vous ne pouvez assigner des tâches qu'à vous-même." };
@@ -154,6 +165,7 @@ export async function modifierTache(
         description: parsed.data.description,
         missionId: parsed.data.missionId || null,
         periodicite: parsed.data.periodicite,
+        dateDebut: startOfDay(parsed.data.dateDebut),
         echeance: endOfDay(parsed.data.echeance),
         priorite: parsed.data.priorite,
         recurrenceActive,
@@ -322,10 +334,20 @@ function prochaineEcheance(base: Date, frequence: RecurrenceFrequence) {
   }
 }
 
-/** Recrée la tâche suivante d'une série récurrente à sa complétion. */
+/**
+ * Recrée la tâche suivante d'une série récurrente à sa complétion.
+ *
+ * Le début et l'échéance sont décalés du même pas de récurrence, pas
+ * recalculés à partir de leur écart en millisecondes : une tâche récurrente
+ * mensuelle sur 3 jours reste une tâche de 3 jours le mois suivant, malgré
+ * les mois de longueurs différentes.
+ */
 async function genererProchaineOccurrence(tache: Task) {
   if (!tache.recurrenceFrequence) return;
 
+  const prochainDebut = startOfDay(
+    prochaineEcheance(tache.dateDebut, tache.recurrenceFrequence),
+  );
   const suivante = endOfDay(
     prochaineEcheance(tache.echeance, tache.recurrenceFrequence),
   );
@@ -349,6 +371,7 @@ async function genererProchaineOccurrence(tache: Task) {
       description: tache.description,
       missionId: tache.missionId,
       periodicite: tache.periodicite,
+      dateDebut: prochainDebut,
       echeance: suivante,
       priorite: tache.priorite,
       origine: tache.origine,

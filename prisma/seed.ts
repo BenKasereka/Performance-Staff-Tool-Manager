@@ -329,6 +329,7 @@ async function main() {
           description: null,
           missionId,
           periodicite: alea() < 0.3 ? "HEBDOMADAIRE" : "PONCTUELLE",
+          dateDebut: echeance,
           echeance,
           priorite,
           statut,

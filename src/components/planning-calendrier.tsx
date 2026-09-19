@@ -1,9 +1,9 @@
 import {
   eachDayOfInterval,
   endOfWeek,
-  isSameDay,
   isSameMonth,
   isToday,
+  isWithinInterval,
   startOfWeek,
 } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -66,7 +66,9 @@ export function PlanningCalendrier({
       )}
 
       {jours.map((jour) => {
-        const tachesDuJour = taches.filter((t) => isSameDay(t.echeance, jour));
+        const tachesDuJour = taches.filter((t) =>
+          isWithinInterval(jour, { start: t.dateDebut, end: t.echeance }),
+        );
         const horsMois =
           granularite === "mois" && !isSameMonth(jour, reference);
 

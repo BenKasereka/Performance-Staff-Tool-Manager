@@ -100,6 +100,10 @@ export async function DetailTache({ tacheId, utilisateur, retour }: Props) {
         <CardContent>
           <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
             <div>
+              <dt className="text-muted-foreground">Début</dt>
+              <dd>{formaterDate(tache.dateDebut)}</dd>
+            </div>
+            <div>
               <dt className="text-muted-foreground">Échéance</dt>
               <dd>
                 {formaterDate(tache.echeance)}

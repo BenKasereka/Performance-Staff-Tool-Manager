@@ -30,6 +30,7 @@ export type TacheEditable = {
   description: string | null;
   missionId: string | null;
   periodicite: string;
+  dateDebut: Date;
   echeance: Date;
   priorite: string;
   recurrenceActive: boolean;
@@ -107,6 +108,19 @@ export function DialogueTache({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
+              <Label htmlFor="dateDebut">Début</Label>
+              <Input
+                id="dateDebut"
+                name="dateDebut"
+                type="date"
+                required
+                defaultValue={versValeurInput(
+                  tache?.dateDebut ?? tache?.echeance ?? new Date(),
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="echeance">Échéance</Label>
               <Input
                 id="echeance"
@@ -116,7 +130,12 @@ export function DialogueTache({
                 defaultValue={versValeurInput(tache?.echeance ?? new Date())}
               />
             </div>
+          </div>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Mêmes dates : tâche à faire dans la journée.
+          </p>
 
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="priorite">Priorité</Label>
               <select
@@ -130,9 +149,7 @@ export function DialogueTache({
                 <option value="HAUTE">Haute</option>
               </select>
             </div>
-          </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="periodicite">Périodicité</Label>
               <select
@@ -147,23 +164,23 @@ export function DialogueTache({
                 <option value="MENSUELLE">Mensuelle</option>
               </select>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="missionId">Activité</Label>
-              <select
-                id="missionId"
-                name="missionId"
-                defaultValue={tache?.missionId ?? ""}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-              >
-                <option value="">Aucune (activité courante)</option>
-                {missions.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nom}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="missionId">Activité</Label>
+            <select
+              id="missionId"
+              name="missionId"
+              defaultValue={tache?.missionId ?? ""}
+              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+            >
+              <option value="">Aucune (activité courante)</option>
+              {missions.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nom}
+                </option>
+              ))}
+            </select>
           </div>
 
           {estManager ? (

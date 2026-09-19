@@ -54,13 +54,15 @@ export default async function PageTaches({
   };
 
   const [tachesBrutes, membres, missions, toutesMissions] = await Promise.all([
-    // La vue du jour reporte les tâches ouvertes non clôturées ; les vues
-    // semaine et mois restent fidèles aux échéances réellement planifiées.
+    // La vue du jour reporte en plus les tâches ouvertes non clôturées ;
+    // toutes les vues montrent une tâche sur chaque jour de sa période
+    // prévue (début → échéance), pas seulement le jour de son échéance.
     granularite === "jour"
       ? chargerTachesDuJour(periode, filtres)
       : chargerTaches({
           ...filtres,
-          echeance: { gte: periode.debut, lte: periode.fin },
+          dateDebut: { lte: periode.fin },
+          echeance: { gte: periode.debut },
         }),
     chargerMembres(),
     chargerMissionsOptions(),

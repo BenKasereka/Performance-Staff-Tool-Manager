@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
+import { isSameDay } from "date-fns";
 import { toast } from "sonner";
 import type { Role, TaskStatut } from "@prisma/client";
 
@@ -38,6 +39,7 @@ export type TacheAffichee = {
   titre: string;
   description: string | null;
   statut: TaskStatut;
+  dateDebut: Date;
   echeance: Date;
   priorite: "BASSE" | "MOYENNE" | "HAUTE";
   periodicite: string;
@@ -131,7 +133,9 @@ export function ListeTaches({
                 )}
 
                 <p className="text-xs text-muted-foreground">
-                  Échéance {formaterDate(tache.echeance)}
+                  {isSameDay(tache.dateDebut, tache.echeance)
+                    ? `Échéance ${formaterDate(tache.echeance)}`
+                    : `Du ${formaterDate(tache.dateDebut)} au ${formaterDate(tache.echeance)}`}
                   {tache.missionNom && ` · ${tache.missionNom}`}
                   {estManager &&
                     tache.assignes.length > 0 &&
@@ -196,6 +200,7 @@ export function ListeTaches({
                           description: tache.description,
                           missionId: tache.missionId,
                           periodicite: tache.periodicite,
+                          dateDebut: tache.dateDebut,
                           echeance: tache.echeance,
                           priorite: tache.priorite,
                           recurrenceActive: tache.recurrenceActive,

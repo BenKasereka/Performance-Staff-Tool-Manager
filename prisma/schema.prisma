@@ -188,6 +188,7 @@ model Task {
   description String?
   missionId   String?
   periodicite Periodicite @default(PONCTUELLE)
+  dateDebut   DateTime
   echeance    DateTime
   priorite    Priorite    @default(MOYENNE)
   statut      TaskStatut  @default(A_FAIRE)
