@@ -10,14 +10,19 @@ export default async function LayoutApplication({
   const session = await auth();
   if (!session?.user) redirect("/connexion");
 
-  // Vérifié en base à chaque navigation (pas dans le JWT) : la mise à jour
-  // faite par /changer-mot-de-passe doit être vue immédiatement, pas
-  // seulement à la prochaine connexion.
+  // Vérifié en base à chaque navigation (pas dans le JWT), qui ne garde que
+  // le nom vu à la connexion : un changement de profil doit être visible
+  // immédiatement dans l'en-tête, pas seulement à la prochaine connexion.
   const utilisateur = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { doitChangerMotDePasse: true },
+    select: { nom: true, doitChangerMotDePasse: true },
   });
-  if (utilisateur?.doitChangerMotDePasse) redirect("/changer-mot-de-passe");
+  if (!utilisateur) redirect("/connexion");
+  if (utilisateur.doitChangerMotDePasse) redirect("/changer-mot-de-passe");
 
-  return <AppShell utilisateur={session.user}>{children}</AppShell>;
+  return (
+    <AppShell utilisateur={{ ...session.user, nom: utilisateur.nom }}>
+      {children}
+    </AppShell>
+  );
 }
