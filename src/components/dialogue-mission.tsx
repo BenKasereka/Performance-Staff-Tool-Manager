@@ -70,7 +70,7 @@ export function DialogueMission({ membres, mission, declencheur }: Props) {
               name="nom"
               required
               defaultValue={mission?.nom}
-              placeholder="Refonte du portail client"
+              placeholder="Réapprovisionnement de l'entrepôt régional"
             />
           </div>
 

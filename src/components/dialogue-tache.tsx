@@ -91,7 +91,7 @@ export function DialogueTache({
               name="titre"
               required
               defaultValue={tache?.titre}
-              placeholder="Préparer le rapport mensuel"
+              placeholder="Relancer le fournisseur pour le bon de commande"
             />
           </div>
 

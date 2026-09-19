@@ -180,7 +180,7 @@ function DialogueProlongation({
               id="motif"
               name="motif"
               rows={3}
-              placeholder="Livrable client décalé, périmètre élargi…"
+              placeholder="Retard fournisseur, dédouanement plus long que prévu…"
             />
           </div>
 
